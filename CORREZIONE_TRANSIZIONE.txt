@@ -1,0 +1,31 @@
+LYRICAR 0.1.5-alpha.6 — TRANSIZIONE SUB-PIXEL
+================================================
+
+PROBLEMA RISOLTO
+----------------
+La versione precedente manteneva il frame rate vicino a 60 Hz, ma il testo
+poteva comunque sembrare scattoso: Tk cambiava il carattere soltanto a passi di
+2 punti. Aumentando la durata, ogni gradino rimaneva visibile più a lungo.
+
+NUOVO RENDERER
+--------------
+- il testo non viene più scalato direttamente come elemento Canvas;
+- ogni riga viene rasterizzata una volta ad alta risoluzione con Pillow;
+- le dimensioni vengono preparate a quarti di pixel;
+- le righe vengono composte in un unico pannello RGB;
+- lo stesso oggetto grafico viene aggiornato a ogni frame;
+- la curva contiene una piccola componente lineare per non fermarsi agli estremi.
+
+RISULTATO ATTESO
+----------------
+Anche portando la durata a 1,20 secondi, crescita, riduzione, spostamento e
+dissolvenza devono apparire continui. La barra e la sincronizzazione Spotify non
+sono state modificate.
+
+PROVA
+-----
+1. Estrai il nuovo ZIP in una cartella separata.
+2. Avvia AVVIA_CON_SPOTIFY.bat.
+3. Apri Visualizza > Impostazioni.
+4. Imposta Durata transizione su 1,20 s e salva.
+5. Osserva almeno 5-10 cambi di riga.

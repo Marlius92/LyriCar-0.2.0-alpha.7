@@ -1,0 +1,13 @@
+LYRICAR 0.2.0-alpha.7 — PREVIEW CON RENDERER 0.1.5 APPROVATO
+====================================================
+
+1. Chiudi tutte le vecchie Preview LyriCar.
+2. Estrai questo pacchetto in una cartella nuova.
+3. Avvia AVVIA_CON_SPOTIFY.bat.
+4. Avvia una canzone nell'app Spotify per Windows.
+5. Per stressare la correzione, apri Visualizza > Impostazioni e imposta la
+   durata della transizione a 1,20 secondi.
+6. Lascia passare almeno 5-10 righe.
+
+Al primo avvio può essere installato Pillow oltre al componente WinRT. Non serve
+alcun Client ID Spotify per la modalità locale.

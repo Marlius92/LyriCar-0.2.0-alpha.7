@@ -1,0 +1,32 @@
+LYRICAR 0.1.5-alpha.6 — SPOTIFY SU WINDOWS
+
+METODO CONSIGLIATO — NESSUN CLIENT ID
+
+1. Chiudi LyriCar se è già aperta.
+2. Fai doppio clic su AVVIA_CON_SPOTIFY.bat.
+3. Al primo avvio attendi il completamento dell'installazione Windows Media Control.
+4. LyriCar prova ad aprire Spotify.
+5. Avvia una canzone nell'app Spotify o nel Web Player.
+6. Torna a LyriCar: titolo, posizione, lyrics e controlli devono aggiornarsi automaticamente.
+
+Questo metodo usa la sessione multimediale di Windows, come Toastify, e non richiede il Dashboard Spotify.
+
+CONTROLLO SINCRONIZZAZIONE
+- la barra deve avanzare senza tornare indietro a ogni secondo;
+- il testo non deve ripetere la transizione tra due righe;
+- spostando davvero la posizione in Spotify, barra e testo devono saltare al nuovo punto.
+
+METODO ALTERNATIVO — WEB API CON CLIENT ID
+
+1. In LyriCar apri Spotify > Apri Dashboard sviluppatori.
+2. Registra esattamente http://127.0.0.1:8765/callback.
+3. Copia il Client ID.
+4. Apri Visualizza > Impostazioni.
+5. Incolla il Client ID e premi Salva e collega Web API.
+6. Autorizza LyriCar nel browser.
+
+SE NON VIENE RILEVATO ALCUN BRANO
+- verifica che la canzone sia realmente in riproduzione;
+- lascia Spotify aperto;
+- usa l'app Spotify per Windows o il Web Player in un browser che esponga i controlli multimediali di Windows;
+- chiudi e riapri AVVIA_CON_SPOTIFY.bat.

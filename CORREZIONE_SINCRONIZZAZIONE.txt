@@ -1,0 +1,23 @@
+LYRICAR 0.1.5-alpha.6 — CORREZIONE BARRA E LYRICS
+
+Problema corretto:
+- la barra avanzava di circa un secondo e poi tornava indietro;
+- la riga del testo ripeteva la stessa transizione.
+
+Causa:
+Windows Media Control può restituire più volte un timestamp ancora uguale o riferito a un aggiornamento precedente. La vecchia Preview sostituiva ogni volta l'orologio fluido con quel valore grezzo.
+
+Nuovo comportamento:
+- il timestamp visualizzato avanza in modo continuo;
+- i piccoli campioni arretrati vengono ignorati;
+- LastUpdatedTime di Windows viene usato per compensare l'età del campione;
+- un vero seek avanti o indietro viene applicato immediatamente;
+- play, pausa, cambio brano e controlli restano attivi.
+
+PROVA
+1. Chiudi ogni vecchia finestra LyriCar.
+2. Estrai completamente il nuovo ZIP in una cartella nuova.
+3. Avvia AVVIA_CON_SPOTIFY.bat.
+4. Riproduci una canzone in Spotify per almeno 20-30 secondi.
+5. Controlla che barra, timer e cambio riga non arretrino.
+6. Sposta manualmente la barra in Spotify: LyriCar deve raggiungere subito il nuovo punto.

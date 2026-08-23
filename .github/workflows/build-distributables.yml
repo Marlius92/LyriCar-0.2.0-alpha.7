@@ -1,0 +1,57 @@
+name: Build distributables
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-exe:
+    name: Windows Preview EXE
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Build Windows Preview
+        shell: pwsh
+        run: ./WindowsPreview/build_windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-Preview-Windows
+          path: WindowsPreview/dist/LyriCar-Preview.exe
+
+  unsigned-ipas:
+    name: Unsigned iOS IPAs
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v6
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Optional preconfigured Spotify Client ID
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+        run: |
+          if [[ -n "$SPOTIFY_CLIENT_ID" ]]; then
+            printf 'SPOTIFY_CLIENT_ID = %s\n' "$SPOTIFY_CLIENT_ID" > Config/Secrets.local.xcconfig
+          fi
+      - name: Build standard IPA
+        run: ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-standard-unsigned
+      - name: Build experimental CarPlay IPA
+        run: ./scripts/build_unsigned_ipa.sh LyriCarExperimental LyriCarExperimental LyriCar-carplay-experimental-unsigned
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-standard-unsigned-IPA
+          path: |
+            build/artifacts/LyriCar-standard-unsigned.ipa
+            build/artifacts/LyriCar-standard-unsigned.ipa.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-carplay-experimental-unsigned-IPA
+          path: |
+            build/artifacts/LyriCar-carplay-experimental-unsigned.ipa
+            build/artifacts/LyriCar-carplay-experimental-unsigned.ipa.sha256

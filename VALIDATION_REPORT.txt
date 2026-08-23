@@ -1,0 +1,45 @@
+LyriCar M0-M5 — Validation Report
+==================================
+
+Version: 0.2.0-alpha.7
+Generated (UTC): 2026-08-23
+
+RESULT: PASS — LOCAL SOURCE VALIDATION
+
+Verified in this environment:
+- 17/17 Swift core tests passed.
+- 20/20 Python preview tests passed.
+- Python compileall passed.
+- Every Swift source file passed the Swift frontend parser.
+- Standard Info.plist, experimental Info-CarPlay.plist, widget Info.plist,
+  privacy manifest and all entitlement files parsed successfully.
+- project.yml and both GitHub Actions workflows parsed as valid YAML.
+- Standard and experimental iOS targets are separated.
+- The standard target excludes LyriCarApp/CarPlay and uses no CarPlay entitlement.
+- The experimental target includes CPTemplateApplicationScene/CPWindow sources
+  and the isolated com.apple.developer.carplay-maps entitlement.
+- Runtime Spotify Client ID storage and target-specific redirect URIs are present.
+- Authorization Code with PKCE, Keychain token storage and refresh logic are present.
+- The iPhone demo can reach the same lyrics renderer without Spotify configuration.
+- PlaybackClock/PlaybackReconciler anti-backstep paths remain present.
+- The approved Pillow sub-pixel Windows renderer remains present and unchanged in behavior.
+- Renault Clio 9.3-inch portrait and generic CarPlay preview profiles remain included.
+- Xcode 27 CI and unsigned standard/experimental IPA packaging workflows are present.
+
+Previous renderer verification retained from 0.1.5-alpha.6:
+- quarter-pixel glyph scaling;
+- RGB compositing with reusable ImageTk surface;
+- transition prewarming;
+- nominal 60 Hz absolute-deadline scheduler;
+- user confirmation that the transition is smooth and approved.
+
+Not verified locally because this environment has no Xcode/iOS SDK:
+- full iOS type-check and linking;
+- generated Xcode project build;
+- unsigned IPA creation;
+- signing and installation on iPhone;
+- real Spotify authorization with the user's Client ID;
+- Live Activity presentation on iPhone/CarPlay;
+- experimental CPWindow behavior and navigation entitlement availability.
+
+The included GitHub Actions workflows perform the missing Xcode build checks.

@@ -1,0 +1,42 @@
+LyriCar 0.1.5-alpha.6 — Sub-pixel transition report
+====================================================
+
+Root cause
+----------
+0.1.4-alpha.5 already kept the Tk event loop close to 60 Hz, but font size was
+quantized in two-point steps. With a 1.2-second transition, the active line had
+only 10 effective sizes and could remain unchanged for 11 consecutive frames.
+The perceived stutter was therefore geometric quantization, not primarily a
+playback-clock or frame-pacing failure.
+
+Implementation
+--------------
+- high-resolution Pillow glyph masks;
+- quarter-pixel scale units;
+- asynchronous preparation of the next transition;
+- one reusable RGB ImageTk surface instead of per-line Tk font resizing;
+- direct high-resolution-to-display mask resize;
+- absolute 60 Hz deadline retained;
+- transition curve: 20% linear + 80% smoothstep;
+- matching softened curve in SwiftUI.
+
+Scale continuity at 1.2 seconds / 73 samples
+---------------------------------------------
+- old two-point renderer: 10 effective sizes;
+- new sub-pixel renderer: 61 effective sizes;
+- longest consecutive hold: 11 frames -> 3 frames.
+
+Synthetic Tk benchmark
+----------------------
+Environment: Linux/Xvfb, Tk 8.6, logical Renault profile 600 x 800, one cold
+preheater plus a full 1.2-second transition.
+
+- rendered frames: 197;
+- mean frame interval: 16.85 ms;
+- 95th percentile frame interval: 17.45 ms;
+- mean draw time: 1.71 ms;
+- 95th percentile draw time: 5.71 ms;
+- maximum interval: 46.93 ms during cold cache preparation.
+
+The benchmark is a development comparison, not a guarantee for every Windows
+machine. The target-PC Spotify test remains authoritative.

@@ -1,0 +1,12 @@
+.build/
+build/
+DerivedData/
+*.xcodeproj/
+Config/Secrets.local.xcconfig
+WindowsPreview/.venv/
+WindowsPreview/dist/
+WindowsPreview/build/
+WindowsPreview/*.spec
+__pycache__/
+*.pyc
+.DS_Store

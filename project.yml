@@ -1,0 +1,182 @@
+name: LyriCar
+options:
+  minimumXcodeGenVersion: 2.43.0
+  deploymentTarget:
+    iOS: "26.0"
+  groupSortPosition: top
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    CURRENT_PROJECT_VERSION: 7
+    MARKETING_VERSION: 0.2.0
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
+
+targets:
+  LyriCarCore:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LyriCarCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_BUNDLE_ID).core
+        PRODUCT_NAME: LyriCarCore
+        SKIP_INSTALL: YES
+        DEFINES_MODULE: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LyriCarWidgets
+        excludes:
+          - Info.plist
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_WIDGET_BUNDLE_ID)
+        PRODUCT_NAME: LyriCarWidgets
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCarWidgets.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: LyriCarWidgets/Info.plist
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarWidgetsExperimental:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LyriCarWidgets
+        excludes:
+          - Info.plist
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_EXPERIMENTAL_WIDGET_BUNDLE_ID)
+        PRODUCT_NAME: LyriCarWidgetsExperimental
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCarWidgets.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: LyriCarWidgets/Info.plist
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCar:
+    type: application
+    platform: iOS
+    sources:
+      - path: LyriCarApp
+        excludes:
+          - Resources
+          - CarPlay
+    resources:
+      - path: LyriCarApp/Resources/Assets.xcassets
+      - path: LyriCarApp/Resources/PrivacyInfo.xcprivacy
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+      - target: LyriCarWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_BUNDLE_ID)
+        PRODUCT_NAME: LyriCar
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCar.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: LyriCarApp/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarExperimental:
+    type: application
+    platform: iOS
+    sources:
+      - path: LyriCarApp
+        excludes:
+          - Resources
+    resources:
+      - path: LyriCarApp/Resources/Assets.xcassets
+      - path: LyriCarApp/Resources/PrivacyInfo.xcprivacy
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+      - target: LyriCarWidgetsExperimental
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_EXPERIMENTAL_BUNDLE_ID)
+        PRODUCT_NAME: LyriCarExperimental
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCar-CarPlay.experimental.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: LyriCarApp/Resources/Info-CarPlay.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarCoreTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/LyriCarCoreTests
+    dependencies:
+      - target: LyriCarCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_BUNDLE_ID).tests
+        GENERATE_INFOPLIST_FILE: YES
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+schemes:
+  LyriCar:
+    build:
+      targets:
+        LyriCar: all
+        LyriCarCore: all
+        LyriCarWidgets: all
+    test:
+      gatherCoverageData: true
+      targets:
+        - LyriCarCoreTests
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  LyriCarExperimental:
+    build:
+      targets:
+        LyriCarExperimental: all
+        LyriCarCore: all
+        LyriCarWidgetsExperimental: all
+    run:
+      config: Debug
+    archive:
+      config: Release

@@ -1,0 +1,7 @@
+// LyriCar shared build settings. The Spotify Client ID can now be entered at runtime.
+SPOTIFY_CLIENT_ID =
+LYRICAR_BUNDLE_ID = com.marlius.lyricar
+LYRICAR_WIDGET_BUNDLE_ID = com.marlius.lyricar.widgets
+LYRICAR_EXPERIMENTAL_BUNDLE_ID = com.marlius.lyricar.experimental
+LYRICAR_EXPERIMENTAL_WIDGET_BUNDLE_ID = com.marlius.lyricar.experimental.widgets
+#include? "Secrets.local.xcconfig"
