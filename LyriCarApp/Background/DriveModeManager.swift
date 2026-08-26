@@ -47,21 +47,37 @@ final class DriveModeManager: NSObject, ObservableObject, CLLocationManagerDeleg
         isRunning = false
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
-        if manager.authorizationStatus == .authorizedAlways || manager.authorizationStatus == .authorizedWhenInUse {
-            beginUpdates()
-        } else if manager.authorizationStatus == .denied || manager.authorizationStatus == .restricted {
-            stop()
+    /// Core Location delivers callbacks on the run loop used to create the
+    /// manager. The manager is created on MainActor, but the Objective-C
+    /// delegate requirement is imported as nonisolated. Assert that dynamic
+    /// guarantee before touching published UI state.
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        MainActor.assumeIsolated {
+            handleAuthorizationChange(manager.authorizationStatus)
         }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(
+        _ manager: CLLocationManager,
+        didUpdateLocations locations: [CLLocation]
+    ) {
         // Intentionally empty: LyriCar never reads or stores the user's position.
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    nonisolated func locationManager(
+        _ manager: CLLocationManager,
+        didFailWithError error: Error
+    ) {
         // Transient Core Location failures do not stop Spotify interpolation.
+    }
+
+    private func handleAuthorizationChange(_ status: CLAuthorizationStatus) {
+        authorizationStatus = status
+        if status == .authorizedAlways || status == .authorizedWhenInUse {
+            beginUpdates()
+        } else if status == .denied || status == .restricted {
+            stop()
+        }
     }
 
     private func beginUpdates() {
