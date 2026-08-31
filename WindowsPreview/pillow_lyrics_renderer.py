@@ -430,6 +430,21 @@ class PillowLyricsRenderer:
             brightness = self.interpolate(distance, brightness_points)
             gray = max(5, min(255, int(round(brightness))))
 
+            # A line that will use karaoke stays at the same dark "unread"
+            # level while it rises from below. This prevents the brief white
+            # flash that otherwise occurred just before it became current.
+            future_karaoke = (
+                index > current_index
+                and self._line_karaoke_eligible(document, index)
+            )
+            current_karaoke = (
+                index == current_index
+                and karaoke_eligible
+                and document.lines[index].text.strip()
+            )
+            if future_karaoke or current_karaoke:
+                gray = min(gray, 77)
+
             layout = self.layout_line(document.lines[index].text, active_size, target_width)
             scale_units = self.quarter_units(layout.fitted_active_size * size_factor)
             top_float = y_center - top
@@ -445,7 +460,7 @@ class PillowLyricsRenderer:
             # The current line can receive a karaoke highlight only when a
             # real following timestamp exists. Without that timing data the
             # renderer remains byte-for-byte equivalent to the approved view.
-            if index == current_index and karaoke_eligible and document.lines[index].text.strip():
+            if current_karaoke:
                 progress = min(max(float(line_progress), 0.0), 1.0)
                 characters = max(1, len(document.lines[index].text))
                 exact = progress * characters
@@ -462,6 +477,14 @@ class PillowLyricsRenderer:
                     )
 
         return RenderedLyrics(image=panel, top=top, transition=transition)
+
+    @staticmethod
+    def _line_karaoke_eligible(document: LyricsDocument, index: int) -> bool:
+        if index < 0 or index + 1 >= len(document.lines):
+            return False
+        current = document.lines[index]
+        following = document.lines[index + 1]
+        return bool(current.text.strip()) and following.timestamp > current.timestamp + 0.05
 
     def cache_stats(self) -> dict[str, int]:
         with self._lock:

@@ -226,9 +226,11 @@ private struct PerspectiveLyricsView: View {
                         let metrics = metrics(for: relative, size: geometry.size)
                         let sourceText = lines[index].text.isEmpty ? "♪" : lines[index].text
                         let isKaraokeLine = index == baseIndex && frame.karaokeEligible && !lines[index].text.isEmpty
+                        let isFutureKaraokeLine = index > baseIndex && karaokeEligible(at: index, in: lines)
                         lyricText(
                             sourceText,
-                            karaokeProgress: isKaraokeLine ? frame.lineProgress : nil
+                            karaokeProgress: isKaraokeLine ? frame.lineProgress : nil,
+                            futureKaraokePreview: isFutureKaraokeLine
                         )
                             .font(.system(
                                 size: metrics.fontSize,
@@ -250,7 +252,12 @@ private struct PerspectiveLyricsView: View {
                                 perspective: 0.55
                             )
                             .shadow(
-                                color: isKaraokeLine ? .white.opacity(0.24) : (abs(relative) < 0.55 ? .white.opacity(0.13) : .clear),
+                                color: karaokeShadowColor(
+                                    isCurrent: isKaraokeLine,
+                                    isFuture: isFutureKaraokeLine,
+                                    progress: frame.lineProgress,
+                                    relative: relative
+                                ),
                                 radius: isKaraokeLine ? 7 : 13
                             )
                             .position(x: geometry.size.width / 2, y: metrics.y)
@@ -264,9 +271,15 @@ private struct PerspectiveLyricsView: View {
 
     /// Builds the active lyric as a true character-by-character highlight.
     /// If `karaokeProgress` is nil the text is rendered exactly as before.
-    private func lyricText(_ value: String, karaokeProgress: Double?) -> Text {
+    private func lyricText(
+        _ value: String,
+        karaokeProgress: Double?,
+        futureKaraokePreview: Bool = false
+    ) -> Text {
         guard let karaokeProgress else {
-            return Text(value).foregroundColor(.white)
+            return Text(value).foregroundColor(
+                futureKaraokePreview ? .white.opacity(0.30) : .white
+            )
         }
 
         let characters = Array(value)
@@ -294,6 +307,31 @@ private struct PerspectiveLyricsView: View {
                 .foregroundColor(.white.opacity(0.30))
         }
         return result
+    }
+
+
+    private func karaokeEligible(at index: Int, in lines: [LyricLine]) -> Bool {
+        guard lines.indices.contains(index), lines.indices.contains(index + 1) else { return false }
+        let current = lines[index]
+        let next = lines[index + 1]
+        return !current.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && next.timestamp > current.timestamp + 0.05
+    }
+
+    private func karaokeShadowColor(
+        isCurrent: Bool,
+        isFuture: Bool,
+        progress: Double,
+        relative: Double
+    ) -> Color {
+        if isFuture { return .clear }
+        if isCurrent {
+            // No white flash when a dark future line becomes current: the glow
+            // grows together with the karaoke sweep from exactly zero.
+            let glow = min(max(progress, 0), 1)
+            return .white.opacity(0.24 * glow)
+        }
+        return abs(relative) < 0.55 ? .white.opacity(0.13) : .clear
     }
 
     private func metrics(for relative: Double, size: CGSize) -> LineMetrics {

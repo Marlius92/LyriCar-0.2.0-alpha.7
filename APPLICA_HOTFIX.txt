@@ -1,13 +1,13 @@
-LyriCar 0.2.5-alpha.12 — Karaoke lettera per lettera
+LyriCar 0.2.6-alpha.13 — Dark Future Karaoke
 
-1. Copia tutto il contenuto di questa cartella nella root del repository LyriCar.
+1. Copia tutto il contenuto di questo ZIP nella root del repository LyriCar.
 2. Conferma la sostituzione dei file.
-3. GitHub Desktop: Commit to main -> Push origin.
-4. Esegui Actions -> CI.
-5. Se verde, Actions -> Build distributables.
-6. Scarica LyriCar-standard-unsigned-IPA.
+3. Commit to main -> Push origin.
+4. Esegui CI.
+5. Se verde, esegui Build distributables.
 
-Comportamento:
-- Con timestamp della riga corrente + timestamp della riga successiva: illuminazione karaoke progressiva.
-- Senza timestamp successivo affidabile: renderer invariato, senza karaoke artificiale.
-- Seek/pausa/ripresa seguono lo stesso clock monotono della barra e dei lyrics.
+Fix:
+- la riga futura destinata al karaoke resta scura mentre sale;
+- nessun flash bianco prima dell'avvio karaoke;
+- il glow parte da zero e cresce con l'illuminazione;
+- se manca il timestamp successivo, il comportamento resta quello precedente.

@@ -50,6 +50,10 @@ class PillowLyricsRendererTests(unittest.TestCase):
         self.assertGreater(rendered.image.height, 400)
         self.assertGreater(rendered.image.getbbox()[2], 0)
 
+    def test_future_karaoke_line_is_detected_only_with_following_timestamp(self):
+        self.assertTrue(self.renderer._line_karaoke_eligible(self.document, 1))
+        self.assertFalse(self.renderer._line_karaoke_eligible(self.document, 3))
+
     def test_transition_masks_can_be_prepared_before_animation(self):
         self.renderer.prepare_transition(
             self.document,
