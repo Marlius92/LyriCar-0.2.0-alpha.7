@@ -10,8 +10,8 @@ configs:
 settings:
   base:
     SWIFT_VERSION: 5.0
-    CURRENT_PROJECT_VERSION: 7
-    MARKETING_VERSION: 0.2.0
+    CURRENT_PROJECT_VERSION: 11
+    MARKETING_VERSION: 0.2.4
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
 
@@ -87,9 +87,10 @@ targets:
         excludes:
           - Resources
           - CarPlay
-    resources:
       - path: LyriCarApp/Resources/Assets.xcassets
+        buildPhase: resources
       - path: LyriCarApp/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
     dependencies:
       - target: LyriCarCore
         embed: true
@@ -117,9 +118,10 @@ targets:
       - path: LyriCarApp
         excludes:
           - Resources
-    resources:
       - path: LyriCarApp/Resources/Assets.xcassets
+        buildPhase: resources
       - path: LyriCarApp/Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
     dependencies:
       - target: LyriCarCore
         embed: true

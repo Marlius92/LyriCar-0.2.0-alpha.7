@@ -34,6 +34,22 @@ if [[ ! -d "$APP_PATH" ]]; then
   exit 1
 fi
 
+# The AppIcon asset catalog must have been compiled by actool into Assets.car.
+# Refuse to publish a broken IPA if the asset catalog was omitted from the target.
+if [[ ! -f "$APP_PATH/Assets.car" ]]; then
+  echo "ERRORE: Assets.car non presente in ${PRODUCT_NAME}.app. L'asset catalog/AppIcon non e stato compilato." >&2
+  echo "Contenuto del bundle:" >&2
+  find "$APP_PATH" -maxdepth 2 -type f -print | sort >&2 || true
+  exit 1
+fi
+
+echo "Verifica AppIcon: Assets.car presente ($(du -h "$APP_PATH/Assets.car" | awk '{print $1}'))."
+if /usr/libexec/PlistBuddy -c 'Print :CFBundleIcons' "$APP_PATH/Info.plist" >/dev/null 2>&1; then
+  echo "Verifica AppIcon: CFBundleIcons presente in Info.plist."
+else
+  echo "Avviso: CFBundleIcons non esplicito; iOS moderno puo ricavare l'icona dall'asset catalog compilato."
+fi
+
 ditto "$APP_PATH" "$STAGING/Payload/${PRODUCT_NAME}.app"
 (
   cd "$STAGING"
