@@ -13,9 +13,8 @@ echo "[3/6] Python syntax"
 python3 -m compileall -q WindowsPreview
 
 echo "[4/6] Swift syntax"
-while IFS= read -r -d '' file; do
-  swiftc -frontend -parse "$file" >/dev/null
-done < <(find Sources Tests LyriCarApp LyriCarWidgets -name '*.swift' -print0)
+find Sources Tests LyriCarApp LyriCarWidgets -name '*.swift' -print0 \
+  | xargs -0 swiftc -frontend -parse >/dev/null
 
 echo "[5/6] XML manifests"
 python3 - <<'PY'
@@ -31,10 +30,19 @@ files = [
     root/'Config/LyriCar-CarPlay.experimental.entitlements',
     root/'Config/LyriCarWidgets.entitlements',
 ]
+parsed_plists = {}
 for path in files:
     with path.open('rb') as handle:
-        plistlib.load(handle)
+        parsed_plists[path] = plistlib.load(handle)
     print(f'  OK {path}')
+for path in (
+    root/'LyriCarApp/Resources/Info.plist',
+    root/'LyriCarApp/Resources/Info-CarPlay.plist',
+    root/'LyriCarWidgets/Info.plist',
+):
+    info = parsed_plists[path]
+    if info.get('CFBundleShortVersionString') != '0.2.3' or info.get('CFBundleVersion') != '10':
+        raise SystemExit(f'Versione bundle incoerente in {path}')
 PY
 
 echo "[6/6] Repository invariants"
@@ -43,7 +51,7 @@ from pathlib import Path
 import json
 root = Path('.')
 version = (root/'VERSION').read_text().strip()
-if version != '0.2.0-alpha.7':
+if version != '0.2.5-alpha.12':
     raise SystemExit(f'Versione inattesa: {version}')
 required = [
     'project.yml', 'Package.swift', 'README.md', 'BUILD_STATUS.md',
@@ -76,6 +84,9 @@ project_text = (root/'project.yml').read_text()
 for marker in ('iOS: "26.0"', 'LyriCarExperimental:', 'LyriCarWidgetsExperimental:'):
     if marker not in project_text:
         raise SystemExit(f'Configurazione progetto incompleta: manca {marker}')
+core_target = project_text.split('  LyriCarCore:', 1)[1].split('  LyriCarWidgets:', 1)[0]
+if 'GENERATE_INFOPLIST_FILE: YES' not in core_target:
+    raise SystemExit('LyriCarCore deve generare un Info.plist interno per la validazione Xcode')
 standard_target = project_text.split('  LyriCar:', 1)[1].split('  LyriCarExperimental:', 1)[0]
 if '- CarPlay' not in standard_target:
     raise SystemExit('Il target standard deve escludere la cartella CarPlay')
@@ -124,6 +135,31 @@ if 'public struct PlaybackClock' not in swift_clock:
 swift_renderer = (root/'LyriCarApp/Features/Lyrics/LyriCarLyricsView.swift').read_text()
 if 'minimumInterval: 1.0 / 60.0' not in swift_renderer or 'transitionCurve(frame.transitionProgress)' not in swift_renderer:
     raise SystemExit('Renderer SwiftUI fluido a 60 Hz con curva continua mancante')
+drive_mode = (root/'LyriCarApp/Background/DriveModeManager.swift').read_text()
+for marker in (
+    'nonisolated func locationManagerDidChangeAuthorization',
+    'MainActor.assumeIsolated',
+    'nonisolated func locationManager(',
+):
+    if marker not in drive_mode:
+        raise SystemExit(f'Compatibilità Swift concurrency di DriveModeManager incompleta: manca {marker}')
+ci_text = (root/'.github/workflows/ci.yml').read_text()
+if 'python -m pip install -r WindowsPreview/requirements-preview.txt' not in ci_text:
+    raise SystemExit('La CI Windows deve installare Pillow prima dei test')
+build_workflow = (root/'.github/workflows/build-distributables.yml').read_text()
+for marker in (
+    'chmod +x scripts/*.sh',
+    'bash ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-standard-unsigned',
+    'bash ./scripts/build_unsigned_ipa.sh LyriCarExperimental LyriCarExperimental LyriCar-carplay-experimental-unsigned',
+):
+    if marker not in build_workflow:
+        raise SystemExit(f'Workflow IPA non robusto ai permessi Git/Windows: manca {marker}')
+build_script = (root/'scripts/build_unsigned_ipa.sh').read_text()
+if 'bash "$ROOT/scripts/generate_project.sh"' not in build_script:
+    raise SystemExit('build_unsigned_ipa.sh deve invocare generate_project.sh tramite bash')
+attributes = (root/'.gitattributes').read_text()
+if '*.sh text eol=lf' not in attributes:
+    raise SystemExit('.gitattributes deve forzare LF per gli script shell')
 json.loads((root/'LyriCarApp/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json').read_text())
 json.loads((root/'LyriCarApp/Resources/Assets.xcassets/AccentColor.colorset/Contents.json').read_text())
 print('  struttura, build separate, demo iPhone e asset validi')

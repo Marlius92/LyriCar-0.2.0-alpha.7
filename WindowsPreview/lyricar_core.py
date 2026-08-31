@@ -221,9 +221,10 @@ class LyricFrame:
     next2: LyricLine | None
     line_progress: float
     transition_progress: float
+    karaoke_eligible: bool = False
 
 
-EMPTY_FRAME = LyricFrame(None, None, None, None, None, None, 0.0, 0.0)
+EMPTY_FRAME = LyricFrame(None, None, None, None, None, None, 0.0, 0.0, False)
 
 
 def _fraction(digits: str | None) -> float:
@@ -353,6 +354,12 @@ def build_frame(
     def at(index: int) -> LyricLine | None:
         return lines[index] if 0 <= index < len(lines) else None
 
+    karaoke_eligible = (
+        next_line is not None
+        and bool(current.text.strip())
+        and next_line.timestamp > current.timestamp + 0.05
+    )
+
     return LyricFrame(
         result,
         at(result - 2),
@@ -362,6 +369,7 @@ def build_frame(
         at(result + 2),
         progress,
         transition,
+        karaoke_eligible,
     )
 
 

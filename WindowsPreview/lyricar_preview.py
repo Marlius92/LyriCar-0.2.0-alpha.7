@@ -34,7 +34,7 @@ from windows_media_client import (
 )
 
 APP_NAME = "LyriCar Preview"
-APP_VERSION = "0.2.0-alpha.7"
+APP_VERSION = "0.2.2-alpha.9"
 SPOTIFY_DASHBOARD_URL = "https://developer.spotify.com/dashboard"
 SPOTIFY_WEB_PLAYER_URL = "https://open.spotify.com"
 TARGET_FRAME_SECONDS = 1.0 / 60.0
@@ -762,10 +762,17 @@ class LyriCarPreview:
             if frame.transition_progress <= 0.0
             else int(round(float(frame.transition_progress) * 4096.0))
         )
+        karaoke_key = (
+            int(round(float(frame.line_progress) * 2048.0))
+            if frame.karaoke_eligible
+            else 0
+        )
         render_key: tuple[object, ...] = (
             id(self.document),
             current_index,
             progress_key,
+            karaoke_key,
+            frame.karaoke_eligible,
             width,
             height,
             active_size,
@@ -778,6 +785,8 @@ class LyriCarPreview:
             self.document,
             current_index,
             float(frame.transition_progress),
+            line_progress=float(frame.line_progress),
+            karaoke_eligible=bool(frame.karaoke_eligible),
             width=width,
             height=height,
             active_size=active_size,

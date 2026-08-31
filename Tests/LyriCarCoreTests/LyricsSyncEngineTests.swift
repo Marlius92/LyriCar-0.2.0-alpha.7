@@ -45,3 +45,14 @@ final class LyricsSyncEngineTests: XCTestCase {
         XCTAssertGreaterThan(late.transitionProgress, 0.5)
     }
 }
+
+extension LyricsSyncEngineTests {
+    func testKaraokeIsEnabledOnlyWithFollowingTimestamp() {
+        let middle = LyricsSyncEngine().frame(for: document, playbackPosition: 10.5)
+        XCTAssertTrue(middle.karaokeEligible)
+        XCTAssertGreaterThan(middle.lineProgress, 0)
+
+        let last = LyricsSyncEngine().frame(for: document, playbackPosition: 19.0)
+        XCTAssertFalse(last.karaokeEligible)
+    }
+}

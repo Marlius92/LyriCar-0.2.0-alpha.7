@@ -224,13 +224,18 @@ private struct PerspectiveLyricsView: View {
                     ForEach(Array(lower...upper), id: \.self) { index in
                         let relative = Double(index - baseIndex) - transition
                         let metrics = metrics(for: relative, size: geometry.size)
-                        Text(lines[index].text.isEmpty ? "♪" : lines[index].text)
+                        let sourceText = lines[index].text.isEmpty ? "♪" : lines[index].text
+                        let isKaraokeLine = index == baseIndex && frame.karaokeEligible && !lines[index].text.isEmpty
+                        lyricText(
+                            sourceText,
+                            karaokeProgress: isKaraokeLine ? frame.lineProgress : nil
+                        )
                             .font(.system(
                                 size: metrics.fontSize,
                                 weight: abs(relative) < 0.55 ? .bold : .semibold,
                                 design: .rounded
                             ))
-                            .foregroundStyle(Color.white.opacity(metrics.opacity))
+                            .opacity(metrics.opacity)
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.52)
@@ -245,8 +250,8 @@ private struct PerspectiveLyricsView: View {
                                 perspective: 0.55
                             )
                             .shadow(
-                                color: abs(relative) < 0.55 ? .white.opacity(0.13) : .clear,
-                                radius: 13
+                                color: isKaraokeLine ? .white.opacity(0.24) : (abs(relative) < 0.55 ? .white.opacity(0.13) : .clear),
+                                radius: isKaraokeLine ? 7 : 13
                             )
                             .position(x: geometry.size.width / 2, y: metrics.y)
                             .accessibilityHidden(abs(relative) > 0.6)
@@ -255,6 +260,40 @@ private struct PerspectiveLyricsView: View {
                 .clipped()
             }
         }
+    }
+
+    /// Builds the active lyric as a true character-by-character highlight.
+    /// If `karaokeProgress` is nil the text is rendered exactly as before.
+    private func lyricText(_ value: String, karaokeProgress: Double?) -> Text {
+        guard let karaokeProgress else {
+            return Text(value).foregroundColor(.white)
+        }
+
+        let characters = Array(value)
+        guard !characters.isEmpty else {
+            return Text(value).foregroundColor(.white)
+        }
+
+        let progress = min(max(karaokeProgress, 0), 1)
+        let exact = progress * Double(characters.count)
+        let completedCount = min(characters.count, Int(floor(exact)))
+        let partial = exact - Double(completedCount)
+
+        let completed = String(characters.prefix(completedCount))
+        let current = completedCount < characters.count ? String(characters[completedCount]) : ""
+        let remainingStart = min(characters.count, completedCount + (current.isEmpty ? 0 : 1))
+        let remaining = String(characters.dropFirst(remainingStart))
+
+        var result = Text(completed).foregroundColor(.white)
+        if !current.isEmpty {
+            result = result + Text(current)
+                .foregroundColor(.white.opacity(0.30 + 0.70 * partial))
+        }
+        if !remaining.isEmpty {
+            result = result + Text(remaining)
+                .foregroundColor(.white.opacity(0.30))
+        }
+        return result
     }
 
     private func metrics(for relative: Double, size: CGSize) -> LineMetrics {

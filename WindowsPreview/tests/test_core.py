@@ -57,6 +57,14 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(format_clock(62.9), "1:02")
         self.assertEqual(format_clock(3661), "1:01:01")
 
+    def test_karaoke_requires_real_following_timestamp(self):
+        middle = build_frame(self.document, 10.5)
+        self.assertTrue(middle.karaoke_eligible)
+        self.assertGreater(middle.line_progress, 0.0)
+
+        last = build_frame(self.document, 19.0)
+        self.assertFalse(last.karaoke_eligible)
+
 
 class PlaybackReconcilerTests(unittest.TestCase):
     def setUp(self):

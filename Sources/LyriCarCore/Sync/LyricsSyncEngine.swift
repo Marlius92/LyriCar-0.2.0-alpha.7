@@ -9,6 +9,9 @@ public struct LyricFrame: Hashable, Sendable {
     public var next2: LyricLine?
     public var lineProgress: Double
     public var transitionProgress: Double
+    /// True only when the current line has a real following timestamp that can
+    /// safely drive the letter-by-letter karaoke highlight.
+    public var karaokeEligible: Bool
 
     public init(
         currentIndex: Int?,
@@ -18,7 +21,8 @@ public struct LyricFrame: Hashable, Sendable {
         next1: LyricLine?,
         next2: LyricLine?,
         lineProgress: Double,
-        transitionProgress: Double
+        transitionProgress: Double,
+        karaokeEligible: Bool = false
     ) {
         self.currentIndex = currentIndex
         self.previous2 = previous2
@@ -28,6 +32,7 @@ public struct LyricFrame: Hashable, Sendable {
         self.next2 = next2
         self.lineProgress = min(max(0, lineProgress), 1)
         self.transitionProgress = min(max(0, transitionProgress), 1)
+        self.karaokeEligible = karaokeEligible
     }
 
     public static let empty = LyricFrame(
@@ -38,7 +43,8 @@ public struct LyricFrame: Hashable, Sendable {
         next1: nil,
         next2: nil,
         lineProgress: 0,
-        transitionProgress: 0
+        transitionProgress: 0,
+        karaokeEligible: false
     )
 }
 
@@ -79,6 +85,10 @@ public struct LyricsSyncEngine: Sendable {
         let lineProgress = min(max(0, (effectivePosition - current.timestamp) / span), 1)
         let remaining = end - effectivePosition
         let transition = next == nil ? 0 : min(max(0, 1 - remaining / transitionWindow), 1)
+        let karaokeEligible = next.map { following in
+            !current.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && following.timestamp > current.timestamp + 0.05
+        } ?? false
 
         return LyricFrame(
             currentIndex: index,
@@ -88,7 +98,8 @@ public struct LyricsSyncEngine: Sendable {
             next1: next,
             next2: line(at: index + 2, in: lines),
             lineProgress: lineProgress,
-            transitionProgress: transition
+            transitionProgress: transition,
+            karaokeEligible: karaokeEligible
         )
     }
 

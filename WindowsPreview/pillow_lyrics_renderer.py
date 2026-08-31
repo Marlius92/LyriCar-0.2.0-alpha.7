@@ -390,6 +390,8 @@ class PillowLyricsRenderer:
         current_index: int,
         transition_progress: float,
         *,
+        line_progress: float = 0.0,
+        karaoke_eligible: bool = False,
         width: int,
         height: int,
         active_size: int,
@@ -439,6 +441,25 @@ class PillowLyricsRenderer:
                 (x, y),
                 mask,
             )
+
+            # The current line can receive a karaoke highlight only when a
+            # real following timestamp exists. Without that timing data the
+            # renderer remains byte-for-byte equivalent to the approved view.
+            if index == current_index and karaoke_eligible and document.lines[index].text.strip():
+                progress = min(max(float(line_progress), 0.0), 1.0)
+                characters = max(1, len(document.lines[index].text))
+                exact = progress * characters
+                completed = min(characters, int(math.floor(exact)))
+                partial = exact - completed
+                visual_progress = min(1.0, (completed + partial) / characters)
+                lit_width = int(round(mask.width * visual_progress))
+                if lit_width > 0:
+                    lit_mask = mask.crop((0, 0, lit_width, mask.height))
+                    panel.paste(
+                        (255, 255, 255),
+                        (x, y),
+                        lit_mask,
+                    )
 
         return RenderedLyrics(image=panel, top=top, transition=transition)
 
