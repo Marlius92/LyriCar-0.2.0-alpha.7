@@ -22,6 +22,7 @@ jobs:
         with:
           name: LyriCar-Preview-Windows
           path: WindowsPreview/dist/LyriCar-Preview.exe
+          if-no-files-found: error
 
   unsigned-ipas:
     name: Unsigned iOS IPAs
@@ -32,7 +33,11 @@ jobs:
         run: xcodebuild -version
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Normalize shell script permissions
+        shell: bash
+        run: chmod +x scripts/*.sh
       - name: Optional preconfigured Spotify Client ID
+        shell: bash
         env:
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
         run: |
@@ -40,18 +45,24 @@ jobs:
             printf 'SPOTIFY_CLIENT_ID = %s\n' "$SPOTIFY_CLIENT_ID" > Config/Secrets.local.xcconfig
           fi
       - name: Build standard IPA
-        run: ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-standard-unsigned
-      - name: Build experimental CarPlay IPA
-        run: ./scripts/build_unsigned_ipa.sh LyriCarExperimental LyriCarExperimental LyriCar-carplay-experimental-unsigned
-      - uses: actions/upload-artifact@v4
+        shell: bash
+        run: bash ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-standard-unsigned
+      - name: Upload standard IPA
+        uses: actions/upload-artifact@v4
         with:
           name: LyriCar-standard-unsigned-IPA
           path: |
             build/artifacts/LyriCar-standard-unsigned.ipa
             build/artifacts/LyriCar-standard-unsigned.ipa.sha256
-      - uses: actions/upload-artifact@v4
+          if-no-files-found: error
+      - name: Build experimental CarPlay IPA
+        shell: bash
+        run: bash ./scripts/build_unsigned_ipa.sh LyriCarExperimental LyriCarExperimental LyriCar-carplay-experimental-unsigned
+      - name: Upload experimental CarPlay IPA
+        uses: actions/upload-artifact@v4
         with:
           name: LyriCar-carplay-experimental-unsigned-IPA
           path: |
             build/artifacts/LyriCar-carplay-experimental-unsigned.ipa
             build/artifacts/LyriCar-carplay-experimental-unsigned.ipa.sha256
+          if-no-files-found: error

@@ -1,0 +1,21 @@
+LYRICAR — HOTFIX BUILD IPA: PERMISSION DENIED
+=============================================
+
+Errore corretto:
+./scripts/build_unsigned_ipa.sh: Permission denied
+
+APPLICAZIONE
+1. Chiudi eventuali file del repository aperti in editor.
+2. Copia nella radice del repository tutte le cartelle e i file contenuti qui.
+   La radice e' la cartella che contiene project.yml.
+3. Conferma la sostituzione di:
+   .github/workflows/build-distributables.yml
+   scripts/build_unsigned_ipa.sh
+4. Verifica che venga copiato anche il file nascosto .gitattributes.
+5. In GitHub Desktop esegui Commit to main e Push origin.
+6. Su GitHub apri Actions > Build distributables > Run workflow.
+
+Il workflow ora:
+- normalizza i permessi degli script;
+- esegue gli script esplicitamente tramite bash;
+- carica l'IPA standard prima di tentare la build CarPlay sperimentale.

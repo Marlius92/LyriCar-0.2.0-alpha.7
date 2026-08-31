@@ -12,7 +12,7 @@ DERIVED_DATA="build/DerivedData-${SAFE_SCHEME}"
 STAGING="build/ipa-${SAFE_SCHEME}"
 ARTIFACTS="build/artifacts"
 
-"$ROOT/scripts/generate_project.sh"
+bash "$ROOT/scripts/generate_project.sh"
 rm -rf "$DERIVED_DATA" "$STAGING"
 mkdir -p "$STAGING/Payload" "$ARTIFACTS"
 
