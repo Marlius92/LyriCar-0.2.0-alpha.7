@@ -2,8 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- This key is only accepted after Apple grants the navigation CarPlay entitlement. -->
-    <key>com.apple.developer.carplay-maps</key>
-    <true/>
+	<key>com.apple.developer.carplay-maps</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.a4799f2e729d57e0.1</string>
+	</array>
 </dict>
 </plist>
