@@ -40,6 +40,7 @@ final class AppModel: ObservableObject {
     private let spotify: SpotifyWebAPI
     private let lyricsRepository: LyricsRepository
     private let liveActivity = LyriCarActivityManager()
+    private let widgetState = LyriCarWidgetStateManager()
     private var playbackClock = PlaybackClock()
     private var pollTask: Task<Void, Never>?
     private var lyricsTask: Task<Void, Never>?
@@ -298,13 +299,16 @@ final class AppModel: ObservableObject {
             while !Task.isCancelled {
                 guard let self else { return }
                 if let playback = self.playback {
+                    let frame = self.frame()
                     await self.liveActivity.update(
                         playback: playback,
-                        frame: self.frame(),
+                        frame: frame,
                         enabled: self.settings.liveActivityEnabled
                     )
+                    self.widgetState.update(playback: playback, frame: frame)
                 } else {
                     await self.liveActivity.end()
+                    self.widgetState.clear()
                 }
                 try? await Task.sleep(for: .seconds(1))
             }
