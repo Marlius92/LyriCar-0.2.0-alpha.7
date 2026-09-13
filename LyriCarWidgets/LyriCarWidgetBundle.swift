@@ -5,5 +5,8 @@ import WidgetKit
 struct LyriCarWidgetBundle: WidgetBundle {
     var body: some Widget {
         LyriCarLiveActivity()
+        LyriCarBeforeWidget()
+        LyriCarCurrentWidget()
+        LyriCarAfterWidget()
     }
 }
