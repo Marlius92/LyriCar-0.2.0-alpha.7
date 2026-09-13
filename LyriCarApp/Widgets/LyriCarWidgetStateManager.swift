@@ -19,7 +19,8 @@ final class LyriCarWidgetStateManager {
 
     private var lastSignature: Signature?
 
-    func update(playback: PlaybackSnapshot, frame: LyricFrame) {
+    @discardableResult
+    func update(playback: PlaybackSnapshot, frame: LyricFrame) -> String {
         let current = frame.current?.text ?? (frame.next1?.text ?? "In attesa del testo…")
         let state = LyriCarWidgetSharedState(
             title: playback.track.title,
@@ -37,7 +38,7 @@ final class LyriCarWidgetStateManager {
             nextLineStartsAt: frame.next1?.timestamp,
             karaokeEligible: frame.karaokeEligible
         )
-        LyriCarWidgetSharedStore.save(state)
+        let transport = LyriCarWidgetSharedStore.save(state)
 
         let signature = Signature(
             track: playback.track.stableCacheKey,
@@ -47,20 +48,23 @@ final class LyriCarWidgetStateManager {
             next2: state.next2,
             isPlaying: state.isPlaying
         )
-        guard signature != lastSignature else { return }
+        guard signature != lastSignature else { return transport.displayName }
         lastSignature = signature
 
         for kind in LyriCarWidgetKinds.all {
             WidgetCenter.shared.reloadTimelines(ofKind: kind)
         }
+        return transport.displayName
     }
 
-    func clear() {
-        LyriCarWidgetSharedStore.clear()
+    @discardableResult
+    func clear() -> String {
+        let transport = LyriCarWidgetSharedStore.clear()
         lastSignature = nil
         for kind in LyriCarWidgetKinds.all {
             WidgetCenter.shared.reloadTimelines(ofKind: kind)
         }
+        return transport.displayName
     }
 }
 
