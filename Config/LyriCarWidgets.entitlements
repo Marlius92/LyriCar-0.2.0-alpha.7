@@ -6,5 +6,9 @@
 	<array>
 		<string>group.a4799f2e729d57e0.1</string>
 	</array>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>6P85QCBUU6.lyricar.shared</string>
+	</array>
 </dict>
 </plist>
