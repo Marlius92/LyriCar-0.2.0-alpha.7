@@ -30,6 +30,7 @@ final class AppModel: ObservableObject {
     @Published var showSettings = false
     @Published private(set) var carPlayConnected = false
     @Published private(set) var appIsActive = true
+    @Published private(set) var widgetSharingStatus = "In attesa"
 
     let settings: LyriCarSettings
     let driveMode: DriveModeManager
@@ -89,12 +90,16 @@ final class AppModel: ObservableObject {
         guard !started else { return }
         started = true
         driveMode.setEnabled(settings.driveModeEnabled)
+        refreshCarPlayDetection()
         if connectionState == .connected { startPolling() }
         startActivityTicker()
     }
 
     func setAppActive(_ active: Bool) {
         appIsActive = active
+        if active {
+            refreshCarPlayDetection()
+        }
         if active, connectionState == .connected {
             startPolling()
             refreshNow()
@@ -298,17 +303,18 @@ final class AppModel: ObservableObject {
         activityTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
+                self.refreshCarPlayDetection()
                 if let playback = self.playback {
                     let frame = self.frame()
                     await self.liveActivity.update(
                         playback: playback,
                         frame: frame,
-                        enabled: self.settings.liveActivityEnabled
+                        enabled: self.settings.liveActityEnabled
                     )
-                    self.widgetState.update(playback: playback, frame: frame)
+                    self.widgetSharingStatus = self.widgetState.update(playback: playback, frame: frame)
                 } else {
                     await self.liveActivity.end()
-                    self.widgetState.clear()
+                    self.widgetSharingStatus = self.widgetState.clear()
                 }
                 try? await Task.sleep(for: .seconds(1))
             }
@@ -354,7 +360,7 @@ final class AppModel: ObservableObject {
         do {
             let incoming = try await spotify.currentPlayback()
             apply(incoming)
-            statusMessage = incoming == nil ? "Apri Spotify e avvia un brano." : ""
+            statusMessage = incoming == nil ? "Aprii Spotify e avvia un brano." : ""
         } catch SpotifyAuthError.notAuthenticated {
             connectionState = .disconnected
             statusMessage = SpotifyAuthError.notAuthenticated.localizedDescription
@@ -372,8 +378,10 @@ final class AppModel: ObservableObject {
             lyricsTask?.cancel()
             lyrics = nil
             lyricsState = .idle
+            widgetSharingStatus = widgetState.clear()
             return
         }
+        publishWidgetState()
         if oldKey != incoming.track.stableCacheKey || lyrics == nil {
             loadLyrics(for: incoming.track)
         }
@@ -388,17 +396,33 @@ final class AppModel: ObservableObject {
             do {
                 let document = try await self.lyricsRepository.lyrics(for: track, forceRefresh: forceRefresh)
                 guard !Task.isCancelled,
-                      self.playback?.track.stableCacheKey == track.stableCacheKey else { return }
+                     self.playback?.track.stableCacheKey == track.stableCacheKey else { return }
                 self.lyrics = document
                 if let document {
                     self.lyricsState = document.instrumental ? .instrumental : .available
                 } else {
                     self.lyricsState = .unavailable
                 }
+                self.publishWidgetState()
             } catch {
                 guard !Task.isCancelled else { return }
                 self.lyricsState = .failed(error.localizedDescription)
             }
+        }
+    }
+
+    private func publishWidgetState() {
+        guard let playback else {
+            widgetSharingStatus = widgetState.clear()
+            return
+        }
+        widgetSharingStatus = widgetState.update(playback: playback, frame: frame())
+    }
+
+    private func refreshCarPlayDetection() {
+        let detected = CarPlayConnectionDetector.isConnected()
+        if detected != carPlayConnected {
+            setCarPlayConnected(detected)
         }
     }
 
