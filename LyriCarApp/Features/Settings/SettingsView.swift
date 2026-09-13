@@ -87,7 +87,9 @@ struct SettingsView: View {
                 }
 
                 Section("Stato") {
-                    LabeledContent("CarPlay", value: model.carPlayConnected ? "Collegato" : "Non collegato")
+                    LabeledContent("CarPlay", value: model.carPlayConnected ? "Collegato / rilevato" : "Non rilevato")
+                    LabeledContent("Widget", value: model.widgetSharingStatus)
+                    LabeledContent("Brano", value: model.playback?.track.title ?? "Nessun brano rilevato")
                     LabeledContent("Drive Mode", value: driveMode.isRunning ? "Attivo" : "Disattivo")
                     LabeledContent("Sorgente", value: model.isDemoMode ? "Demo locale" : "Spotify Web API")
                     if !model.statusMessage.isEmpty {
@@ -109,8 +111,8 @@ struct SettingsView: View {
     }
 
     private var versionLabel: String {
-        let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "7"
+        let marketing = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.1"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "15"
         return "\(marketing) (\(build))"
     }
 
