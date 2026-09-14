@@ -82,7 +82,7 @@ struct LyriCarCompanionLyricsWidget: Widget {
             CompanionLyricsView(state: entry.state)
                 .containerBackground(.black, for: .widget)
         }
-        .configurationDisplayName("LyriCar Companion · Corrente")
+        .configurationDisplayName("LyriComp · Corrente")
         .description("Riga corrente grande e due righe future. Nessun controllo, barra o tempo.")
         .supportedFamilies([.systemSmall])
     }
