@@ -12,6 +12,7 @@ struct LyriCarCompanionApp: App {
 
 private struct CompanionStatusView: View {
     @State private var state: LyriCarWidgetSharedState? = LyriCarWidgetSharedStore.load()
+    @State private var diagnostics = LyriCarWidgetSharedStore.diagnostics()
     @State private var now = Date()
 
     var body: some View {
@@ -48,7 +49,7 @@ private struct CompanionStatusView: View {
 
                     diagnosticsCard
 
-                    Text("Non collegare Spotify anche qui: LyriComp usa lo stato condiviso di LyriCar.")
+                    Text("LyriComp prova prima l’App Group e poi il Keychain condiviso. Se almeno uno dei due canali resta disponibile dopo la firma, può ricevere lo stato di LyriCar.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -60,6 +61,7 @@ private struct CompanionStatusView: View {
             while !Task.isCancelled {
                 now = Date()
                 state = LyriCarWidgetSharedStore.load()
+                diagnostics = LyriCarWidgetSharedStore.diagnostics()
                 try? await Task.sleep(for: .seconds(1))
             }
         }
@@ -67,23 +69,33 @@ private struct CompanionStatusView: View {
 
     private var diagnosticsCard: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Label(
-                LyriCarWidgetSharedStore.appGroupAvailable ? "App Group disponibile" : "App Group non disponibile",
-                systemImage: LyriCarWidgetSharedStore.appGroupAvailable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+            statusLabel(
+                diagnostics.appGroupAvailable,
+                success: "App Group disponibile",
+                failure: "App Group non disponibile"
             )
-            .foregroundStyle(LyriCarWidgetSharedStore.appGroupAvailable ? .green : .orange)
+
+            statusLabel(
+                diagnostics.keychainAccessAvailable,
+                success: "Keychain condiviso disponibile",
+                failure: "Keychain condiviso non disponibile"
+            )
 
             if let state {
                 let age = max(0, now.timeIntervalSince(state.capturedAt))
-                Label("Stato condiviso ricevuto · \(age.formatted(.number.precision(.fractionLength(0)))) s fa", systemImage: "arrow.triangle.2.circlepath")
-                    .foregroundStyle(.secondary)
+                Label("Stato condiviso ricevuto · \(age.formatted(.number.precision(.fractionLength(0)))) s fa", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
             } else {
                 Label("Nessuno stato condiviso ricevuto", systemImage: "xmark.circle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.orange)
             }
 
-            if !LyriCarWidgetSharedStore.appGroupAvailable {
-                Text("La firma iOS non ha concesso l’App Group. Firma LyriCar e LyriComp con lo stesso certificato/profilo e senza cambiare i bundle ID; altrimenti i due widget non possono condividere brano e testi.")
+            if !diagnostics.appGroupAvailable && diagnostics.keychainAccessAvailable {
+                Text("Signulous non ha concesso l’App Group, ma il fallback Keychain è disponibile. LyriComp può ancora funzionare se LyriCar riesce a scrivere nello stesso gruppo Keychain.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if !diagnostics.appGroupAvailable && !diagnostics.keychainAccessAvailable {
+                Text("La firma iOS non ha concesso né App Group né Keychain condiviso. In questa configurazione LyriCar e LyriComp non possono scambiarsi direttamente lo stato.")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -92,5 +104,17 @@ private struct CompanionStatusView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func statusLabel(
+        _ available: Bool,
+        success: String,
+        failure: String
+    ) -> some View {
+        Label(
+            available ? success : failure,
+            systemImage: available ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+        )
+        .foregroundStyle(available ? .green : .orange)
     }
 }
