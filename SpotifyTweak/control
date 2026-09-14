@@ -1,0 +1,8 @@
+Package: com.marlius.lyricarspotify
+Name: LyriCar Spotify
+Version: 0.1.0
+Architecture: iphoneos-arm
+Description: Adds a Lyrics entry point to Spotify's CarPlay Now Playing interface. No playback or Premium bypass functionality.
+Maintainer: Marlius92
+Author: Marlius92
+Section: Tweaks
