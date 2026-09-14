@@ -1,12 +1,10 @@
 import Foundation
-#if canImport(Security)
-import Security
-#endif
 
-/// Reads the entitlements that are actually present after the IPA has been
-/// re-signed. Third-party signers may rewrite App Group and Keychain access
-/// group identifiers, so runtime code must not assume the identifiers compiled
-/// into the unsigned IPA survived unchanged.
+/// Reads the entitlements authorized by the provisioning profile that is
+/// actually embedded after the IPA has been signed. Third-party signers may
+/// rewrite App Group and Keychain access group identifiers, so runtime code
+/// must not assume the identifiers compiled into the unsigned IPA survived
+/// unchanged.
 public enum LyriCarSigningEntitlements {
     public static let legacyAppGroupIdentifier = "group.a4799f2e729d57e0.1"
     public static let legacyKeychainAccessGroup = "6P85QCBUU6.lyricar.shared"
@@ -44,14 +42,22 @@ public enum LyriCarSigningEntitlements {
             return legacyKeychainAccessGroup
         }
 
-        // Exclude the private/default application identifier when possible: it
-        // is app-specific and therefore cannot be the bridge to another target.
+        // Wildcard entries authorize signing but are not literal access-group
+        // values that can be passed to SecItem APIs at runtime.
         let applicationID = applicationIdentifier
-        let candidates = groups.filter { $0 != applicationID }
+        let candidates = groups.filter {
+            $0 != applicationID && !$0.contains("*")
+        }
         if let preferred = candidates.first(where: isLyriCarLikeGroup) {
             return preferred
         }
         return candidates.count == 1 ? candidates[0] : nil
+    }
+
+    /// True when a signed-device provisioning profile could be decoded. The
+    /// simulator and unsigned build products normally return false here.
+    public static var provisioningProfileAvailable: Bool {
+        profileEntitlements != nil
     }
 
     private static func isLyriCarLikeGroup(_ value: String) -> Bool {
@@ -63,24 +69,51 @@ public enum LyriCarSigningEntitlements {
     }
 
     private static func stringEntitlement(_ name: String) -> String? {
-        #if canImport(Security) && os(iOS)
-        guard let task = SecTaskCreateFromSelf(nil),
-              let value = SecTaskCopyValueForEntitlement(task, name as CFString, nil)
-        else { return nil }
-        return value as? String
-        #else
-        return nil
-        #endif
+        profileEntitlements?[name] as? String
     }
 
     private static func stringArrayEntitlement(_ name: String) -> [String] {
-        #if canImport(Security) && os(iOS)
-        guard let task = SecTaskCreateFromSelf(nil),
-              let value = SecTaskCopyValueForEntitlement(task, name as CFString, nil)
-        else { return [] }
-        return value as? [String] ?? []
-        #else
-        return []
-        #endif
+        profileEntitlements?[name] as? [String] ?? []
     }
+
+    /// `embedded.mobileprovision` is a CMS container whose payload contains an
+    /// XML plist. Extracting that plist avoids private/unavailable SecTask APIs
+    /// and, importantly for Signulous, inspects the profile shipped with the
+    /// re-signed application rather than our original unsigned entitlements.
+    private static let profileEntitlements: [String: Any]? = {
+        #if os(iOS)
+        guard let profileURL = Bundle.main.url(
+            forResource: "embedded",
+            withExtension: "mobileprovision"
+        ), let profileData = try? Data(contentsOf: profileURL) else {
+            return nil
+        }
+
+        // The XML payload is ASCII/UTF-8 even though the surrounding CMS data
+        // is binary. Lossy UTF-8 decoding preserves the XML delimiters/content.
+        let decoded = String(decoding: profileData, as: UTF8.self)
+        guard let xmlStart = decoded.range(of: "<?xml"),
+              let plistEnd = decoded.range(
+                of: "</plist>",
+                range: xmlStart.lowerBound..<decoded.endIndex
+              ) else {
+            return nil
+        }
+
+        let plistText = String(decoded[xmlStart.lowerBound..<plistEnd.upperBound])
+        guard let plistData = plistText.data(using: .utf8),
+              let object = try? PropertyListSerialization.propertyList(
+                from: plistData,
+                options: [],
+                format: nil
+              ),
+              let profile = object as? [String: Any],
+              let entitlements = profile["Entitlements"] as? [String: Any] else {
+            return nil
+        }
+        return entitlements
+        #else
+        return nil
+        #endif
+    }()
 }
