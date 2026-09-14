@@ -112,8 +112,16 @@ public enum LyriCarWidgetSharedTransport: String, Codable, Hashable, Sendable {
 /// Redundant shared store used by the host apps and WidgetKit extensions.
 public enum LyriCarWidgetSharedStore {
     public static let stateKey = "lyricar.widget.shared-state.v2"
-    public static let appGroupIdentifier = "group.a4799f2e729d57e0.1"
-    public static let keychainAccessGroup = "6P85QCBUU6.lyricar.shared"
+
+    /// Effective identifiers from the final code signature. Signers such as
+    /// Signulous can rewrite these values while re-signing the IPA.
+    public static var appGroupIdentifier: String? {
+        LyriCarSigningEntitlements.resolvedAppGroupIdentifier
+    }
+
+    public static var keychainAccessGroup: String? {
+        LyriCarSigningEntitlements.resolvedKeychainAccessGroup
+    }
 
     private static let sharedFilename = "LyriCarWidgetState-v2.json"
     private static let keychainService = "com.marlius.lyricar.widget-state"
@@ -164,9 +172,12 @@ public enum LyriCarWidgetSharedStore {
 
     private static var sharedContainerURL: URL? {
         #if os(iOS)
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)
+        guard let appGroupIdentifier else { return nil }
+        return FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
+        )
         #else
-        nil
+        return nil
         #endif
     }
 
@@ -175,29 +186,24 @@ public enum LyriCarWidgetSharedStore {
     }
 
     private static func saveToAppGroup(_ data: Data) -> Bool {
-        var wrote = false
-
-        if let url = sharedFileURL {
-            do {
-                try data.write(to: url, options: [.atomic])
-                wrote = true
-            } catch {
-                // Keep the UserDefaults attempt below as a second App Group path.
-            }
+        guard let appGroupIdentifier, let url = sharedFileURL else { return false }
+        do {
+            try data.write(to: url, options: [.atomic])
+        } catch {
+            return false
         }
 
         #if os(iOS)
         if let defaults = UserDefaults(suiteName: appGroupIdentifier) {
             defaults.set(data, forKey: stateKey)
             defaults.synchronize()
-            wrote = true
         }
         #endif
-
-        return wrote
+        return true
     }
 
     private static func loadFromAppGroup() -> Data? {
+        guard let appGroupIdentifier, sharedContainerURL != nil else { return nil }
         if let url = sharedFileURL,
            let data = try? Data(contentsOf: url) {
             return data
@@ -211,6 +217,7 @@ public enum LyriCarWidgetSharedStore {
     }
 
     private static func clearAppGroup() -> Bool {
+        guard let appGroupIdentifier, sharedContainerURL != nil else { return false }
         var cleared = false
         if let url = sharedFileURL {
             try? FileManager.default.removeItem(at: url)
@@ -228,6 +235,7 @@ public enum LyriCarWidgetSharedStore {
 
     private static func saveToKeychain(_ data: Data) -> Bool {
         #if canImport(Security) && os(iOS)
+        guard let keychainAccessGroup else { return false }
         let base: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainService,
@@ -253,6 +261,7 @@ public enum LyriCarWidgetSharedStore {
 
     private static func loadFromKeychain() -> Data? {
         #if canImport(Security) && os(iOS)
+        guard let keychainAccessGroup else { return nil }
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainService,
@@ -271,6 +280,7 @@ public enum LyriCarWidgetSharedStore {
 
     private static func clearKeychain() -> Bool {
         #if canImport(Security) && os(iOS)
+        guard let keychainAccessGroup else { return false }
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainService,
