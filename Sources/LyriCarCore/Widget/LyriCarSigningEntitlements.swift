@@ -25,15 +25,37 @@ public enum LyriCarSigningEntitlements {
         stringArrayEntitlement("keychain-access-groups")
     }
 
+    /// Picks the same usable App Group in every LyriCar/LyriComp process.
+    ///
+    /// Signulous can replace our original group with a pool of generated groups
+    /// (for example `group.<signer>.1 ... .5`). The order in the provisioning
+    /// profile is not guaranteed, therefore all candidates are sorted before a
+    /// selection is made. On iOS we additionally probe the container so a group
+    /// is never reported as selected unless the current signed executable can
+    /// actually open it.
     public static var resolvedAppGroupIdentifier: String? {
-        let groups = appGroupIdentifiers
+        let groups = Array(Set(appGroupIdentifiers)).sorted()
+
+        let orderedCandidates: [String]
         if groups.contains(legacyAppGroupIdentifier) {
-            return legacyAppGroupIdentifier
+            orderedCandidates = [legacyAppGroupIdentifier]
+                + groups.filter { $0 != legacyAppGroupIdentifier }
+        } else {
+            let preferred = groups.filter(isLyriCarLikeGroup)
+            let remaining = groups.filter { !preferred.contains($0) }
+            orderedCandidates = preferred + remaining
         }
-        if let preferred = groups.first(where: isLyriCarLikeGroup) {
-            return preferred
+
+        #if os(iOS)
+        return orderedCandidates.first { identifier in
+            FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: identifier
+            ) != nil
         }
-        return groups.count == 1 ? groups[0] : nil
+        #else
+        // Unit tests and non-iOS builds cannot probe App Group containers.
+        return orderedCandidates.first
+        #endif
     }
 
     public static var resolvedKeychainAccessGroup: String? {
@@ -43,11 +65,17 @@ public enum LyriCarSigningEntitlements {
         }
 
         // Wildcard entries authorize signing but are not literal access-group
-        // values that can be passed to SecItem APIs at runtime.
+        // values that can be passed to SecItem APIs at runtime. Apple-private
+        // groups such as com.apple.token must never be used for LyriCar state.
         let applicationID = applicationIdentifier
-        let candidates = groups.filter {
-            $0 != applicationID && !$0.contains("*")
-        }
+        let candidates = groups
+            .filter {
+                $0 != applicationID
+                    && !$0.contains("*")
+                    && !$0.hasPrefix("com.apple.")
+            }
+            .sorted()
+
         if let preferred = candidates.first(where: isLyriCarLikeGroup) {
             return preferred
         }
