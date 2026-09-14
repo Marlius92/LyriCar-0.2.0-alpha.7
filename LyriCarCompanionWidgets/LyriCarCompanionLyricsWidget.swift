@@ -19,19 +19,58 @@ private struct CompanionProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<CompanionEntry>) -> Void) {
         let now = Date()
         let state = LyriCarWidgetSharedStore.load() ?? .placeholder
-        let entry = CompanionEntry(date: now, state: state)
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh(for: state, now: now))))
+        var entries = [CompanionEntry(date: now, state: state)]
+        var refreshDate = now.addingTimeInterval(10)
+
+        // Do not rely exclusively on WidgetKit granting an immediate timeline
+        // reload from the other LyriCar host app. When the timestamp of the next
+        // lyric is already known, pre-schedule that visual transition directly
+        // in this widget's own timeline.
+        if let transition = scheduledTransition(for: state, now: now) {
+            entries.append(transition.entry)
+            refreshDate = transition.entry.date.addingTimeInterval(1)
+        }
+
+        completion(Timeline(entries: entries, policy: .after(refreshDate)))
     }
 
-    private func nextRefresh(for state: LyriCarWidgetSharedState, now: Date) -> Date {
-        let position = state.estimatedPosition(at: now)
-        if state.isPlaying,
-           let nextStart = state.nextLineStartsAt,
-           nextStart > position {
-            let delay = min(max(nextStart - position + 0.08, 1.0), 15.0)
-            return now.addingTimeInterval(delay)
+    private func scheduledTransition(
+        for state: LyriCarWidgetSharedState,
+        now: Date
+    ) -> (entry: CompanionEntry, delay: TimeInterval)? {
+        guard state.isPlaying,
+              !state.next1.isEmpty,
+              let nextStart = state.nextLineStartsAt else {
+            return nil
         }
-        return now.addingTimeInterval(10)
+
+        let position = state.estimatedPosition(at: now)
+        guard nextStart > position else { return nil }
+
+        let delay = nextStart - position
+        // Very distant entries are better refreshed from the shared store first.
+        guard delay <= 30 else { return nil }
+
+        let transitionDate = now.addingTimeInterval(max(0.05, delay))
+        let shifted = LyriCarWidgetSharedState(
+            title: state.title,
+            artist: state.artist,
+            previous3: state.previous2,
+            previous2: state.previous1,
+            previous1: state.current,
+            current: state.next1,
+            next1: state.next2,
+            next2: "",
+            position: nextStart,
+            duration: state.duration,
+            isPlaying: state.isPlaying,
+            capturedAt: transitionDate,
+            currentLineStartedAt: nextStart,
+            nextLineStartsAt: nil,
+            karaokeEligible: false
+        )
+
+        return (CompanionEntry(date: transitionDate, state: shifted), delay)
     }
 }
 
