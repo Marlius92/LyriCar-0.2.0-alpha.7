@@ -2,6 +2,7 @@ import Foundation
 
 public struct LyricFrame: Hashable, Sendable {
     public var currentIndex: Int?
+    public var previous3: LyricLine?
     public var previous2: LyricLine?
     public var previous1: LyricLine?
     public var current: LyricLine?
@@ -15,6 +16,7 @@ public struct LyricFrame: Hashable, Sendable {
 
     public init(
         currentIndex: Int?,
+        previous3: LyricLine? = nil,
         previous2: LyricLine?,
         previous1: LyricLine?,
         current: LyricLine?,
@@ -25,6 +27,7 @@ public struct LyricFrame: Hashable, Sendable {
         karaokeEligible: Bool = false
     ) {
         self.currentIndex = currentIndex
+        self.previous3 = previous3
         self.previous2 = previous2
         self.previous1 = previous1
         self.current = current
@@ -92,6 +95,7 @@ public struct LyricsSyncEngine: Sendable {
 
         return LyricFrame(
             currentIndex: index,
+            previous3: line(at: index - 3, in: lines),
             previous2: line(at: index - 2, in: lines),
             previous1: line(at: index - 1, in: lines),
             current: current,

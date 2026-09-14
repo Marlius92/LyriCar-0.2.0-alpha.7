@@ -7,6 +7,7 @@ final class WidgetSharedStateTests: XCTestCase {
         let state = LyriCarWidgetSharedState(
             title: "Song",
             artist: "Artist",
+            previous3: "-3",
             previous2: "-2",
             previous1: "-1",
             current: "current",
@@ -23,6 +24,7 @@ final class WidgetSharedStateTests: XCTestCase {
         let data = try JSONEncoder().encode(state)
         let decoded = try JSONDecoder().decode(LyriCarWidgetSharedState.self, from: data)
         XCTAssertEqual(decoded, state)
+        XCTAssertEqual(decoded.previous3, "-3")
         XCTAssertEqual(decoded.estimatedPosition(at: captured.addingTimeInterval(3)), 45, accuracy: 0.001)
     }
 }

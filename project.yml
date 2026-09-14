@@ -10,8 +10,8 @@ configs:
 settings:
   base:
     SWIFT_VERSION: 5.0
-    CURRENT_PROJECT_VERSION: 15
-    MARKETING_VERSION: 0.3.1
+    CURRENT_PROJECT_VERSION: 16
+    MARKETING_VERSION: 0.3.2
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
 
@@ -52,6 +52,29 @@ targets:
         SKIP_INSTALL: YES
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: LyriCarWidgets/Info.plist
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarCompanionWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LyriCarCompanionWidgets
+        excludes:
+          - Info.plist
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_COMPANION_WIDGET_BUNDLE_ID)
+        PRODUCT_NAME: LyriCarCompanionWidgets
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCarWidgets.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: LyriCarCompanionWidgets/Info.plist
     configFiles:
       Debug: Config/Base.xcconfig
       Release: Config/Base.xcconfig
@@ -103,6 +126,33 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Config/LyriCar.entitlements
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: LyriCarApp/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+    configFiles:
+      Debug: Config/Base.xcconfig
+      Release: Config/Base.xcconfig
+
+  LyriCarCompanion:
+    type: application
+    platform: iOS
+    sources:
+      - path: LyriCarCompanion
+      - path: LyriCarApp/Resources/Assets.xcassets
+        buildPhase: resources
+    dependencies:
+      - target: LyriCarCore
+        embed: true
+      - target: LyriCarCompanionWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(LYRICAR_COMPANION_BUNDLE_ID)
+        PRODUCT_NAME: LyriCarCompanion
+        CODE_SIGN_ENTITLEMENTS: Config/LyriCar.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: LyriCar Companion
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1,2"
@@ -168,6 +218,17 @@ schemes:
       gatherCoverageData: true
       targets:
         - LyriCarCoreTests
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+  LyriCarCompanion:
+    build:
+      targets:
+        LyriCarCompanion: all
+        LyriCarCore: all
+        LyriCarCompanionWidgets: all
     run:
       config: Debug
     archive:

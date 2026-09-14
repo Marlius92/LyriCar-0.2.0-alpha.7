@@ -2,14 +2,13 @@ import Foundation
 import LyriCarCore
 import WidgetKit
 
-/// Bridges the live LyriCar playback state into the WidgetKit extension.
-/// Widget timelines are reloaded only when meaningful text/playback state changes;
-/// the song progress bar itself uses a system timer interval and stays fluid without
-/// requesting one widget reload per second.
+/// Bridges the live LyriCar playback state into WidgetKit.
 @MainActor
 final class LyriCarWidgetStateManager {
     private struct Signature: Equatable {
         let track: String
+        let previous3: String
+        let previous2: String
         let previous1: String
         let current: String
         let next1: String
@@ -25,6 +24,7 @@ final class LyriCarWidgetStateManager {
         let state = LyriCarWidgetSharedState(
             title: playback.track.title,
             artist: playback.track.displayArtist,
+            previous3: frame.previous3?.text ?? "",
             previous2: frame.previous2?.text ?? "",
             previous1: frame.previous1?.text ?? "",
             current: current,
@@ -42,6 +42,8 @@ final class LyriCarWidgetStateManager {
 
         let signature = Signature(
             track: playback.track.stableCacheKey,
+            previous3: state.previous3,
+            previous2: state.previous2,
             previous1: state.previous1,
             current: state.current,
             next1: state.next1,
@@ -72,6 +74,7 @@ private enum LyriCarWidgetKinds {
     static let all = [
         "LyriCar.Context.Before",
         "LyriCar.Current",
-        "LyriCar.Context.After"
+        "LyriCar.Context.After",
+        "LyriCar.Companion.Lower"
     ]
 }

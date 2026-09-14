@@ -20,9 +20,6 @@ private struct LyriCarWidgetProvider: TimelineProvider {
         let now = Date()
         let state = LyriCarWidgetSharedStore.load() ?? .placeholder
         let entry = LyriCarWidgetEntry(date: now, state: state)
-        // The app asks WidgetCenter for a reload at lyric/track transitions. This
-        // fallback refresh ensures stale state eventually recovers even if iOS
-        // suspended the app before it could signal the extension.
         completion(Timeline(entries: [entry], policy: .after(now.addingTimeInterval(15 * 60))))
     }
 }
@@ -35,8 +32,8 @@ struct LyriCarBeforeWidget: Widget {
             LyriCarBeforeWidgetView(state: entry.state)
                 .containerBackground(.black, for: .widget)
         }
-        .configurationDisplayName("LyriCar · Prima")
-        .description("Le righe appena cantate e il contesto della riga corrente.")
+        .configurationDisplayName("LyriCar · Superiore")
+        .description("Le tre righe appena cantate, senza controlli o tempi.")
         .supportedFamilies([.systemSmall])
     }
 }
@@ -50,7 +47,7 @@ struct LyriCarCurrentWidget: Widget {
                 .containerBackground(.black, for: .widget)
         }
         .configurationDisplayName("LyriCar · Corrente")
-        .description("La riga corrente grande con progressione del brano.")
+        .description("Riga corrente grande e due righe future, solo testo.")
         .supportedFamilies([.systemSmall])
     }
 }
@@ -64,7 +61,7 @@ struct LyriCarAfterWidget: Widget {
                 .containerBackground(.black, for: .widget)
         }
         .configurationDisplayName("LyriCar · Dopo")
-        .description("Le prossime righe e il tempo restante del brano.")
+        .description("Le due righe successive, solo testo.")
         .supportedFamilies([.systemSmall])
     }
 }
@@ -73,14 +70,14 @@ private struct LyriCarBeforeWidgetView: View {
     let state: LyriCarWidgetSharedState
 
     var body: some View {
-        VStack(spacing: 7) {
+        VStack(spacing: 8) {
             Spacer(minLength: 0)
-            line(state.previous2, size: 11, opacity: 0.28, lines: 2)
-            line(state.previous1, size: 14, opacity: 0.52, lines: 2)
-            line(state.current, size: 17, opacity: 0.82, lines: 2, weight: .semibold)
+            line(state.previous3, size: 11, opacity: 0.24, lines: 2)
+            line(state.previous2, size: 13, opacity: 0.44, lines: 2)
+            line(state.previous1, size: 16, opacity: 0.72, lines: 2, weight: .semibold)
             Spacer(minLength: 0)
         }
-        .padding(12)
+        .padding(11)
     }
 }
 
@@ -88,37 +85,21 @@ private struct LyriCarCurrentWidgetView: View {
     let state: LyriCarWidgetSharedState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(state.title)
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
-                Text(state.artist)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
+        VStack(spacing: 7) {
             Spacer(minLength: 0)
-
             Text(state.current)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(4)
-                .minimumScaleFactor(0.58)
-                .multilineTextAlignment(.leading)
+                .minimumScaleFactor(0.50)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
 
+            line(state.next1, size: 13, opacity: 0.52, lines: 2, weight: .medium)
+            line(state.next2, size: 11, opacity: 0.26, lines: 2)
             Spacer(minLength: 0)
-
-            if state.isPlaying, state.duration > 0 {
-                ProgressView(timerInterval: state.playbackInterval, countsDown: false)
-                    .tint(.white)
-            } else {
-                ProgressView(value: state.duration > 0 ? state.position / state.duration : 0)
-                    .tint(.white)
-            }
         }
-        .padding(12)
+        .padding(10)
     }
 }
 
@@ -126,33 +107,13 @@ private struct LyriCarAfterWidgetView: View {
     let state: LyriCarWidgetSharedState
 
     var body: some View {
-        VStack(spacing: 7) {
+        VStack(spacing: 10) {
             Spacer(minLength: 0)
-            line(state.next1, size: 17, opacity: 0.66, lines: 2, weight: .semibold)
-            line(state.next2, size: 12, opacity: 0.30, lines: 2)
+            line(state.next1, size: 17, opacity: 0.68, lines: 3, weight: .semibold)
+            line(state.next2, size: 13, opacity: 0.34, lines: 3)
             Spacer(minLength: 0)
-            HStack {
-                Text("restano")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if state.isPlaying, state.duration > 0 {
-                    Text(timerInterval: state.remainingInterval, countsDown: true)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(remainingText)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-            }
         }
         .padding(12)
-    }
-
-    private var remainingText: String {
-        let seconds = max(0, Int(state.duration - state.position))
-        return String(format: "-%d:%02d", seconds / 60, seconds % 60)
     }
 }
 
@@ -169,7 +130,7 @@ private func line(
             .font(.system(size: size, weight: weight, design: .rounded))
             .foregroundStyle(.white.opacity(opacity))
             .lineLimit(lines)
-            .minimumScaleFactor(0.68)
+            .minimumScaleFactor(0.62)
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
     }

@@ -12,17 +12,19 @@ final class LyricsSyncEngineTests: XCTestCase {
             LyricLine(index: 1, timestamp: 6, text: "one"),
             LyricLine(index: 2, timestamp: 10, text: "two"),
             LyricLine(index: 3, timestamp: 14, text: "three"),
-            LyricLine(index: 4, timestamp: 18, text: "four")
+            LyricLine(index: 4, timestamp: 18, text: "four"),
+            LyricLine(index: 5, timestamp: 22, text: "five")
         ]
     )
 
-    func testBuildsFiveLineWindow() {
-        let frame = LyricsSyncEngine().frame(for: document, playbackPosition: 10.5)
-        XCTAssertEqual(frame.current?.text, "two")
-        XCTAssertEqual(frame.previous2?.text, "zero")
-        XCTAssertEqual(frame.previous1?.text, "one")
-        XCTAssertEqual(frame.next1?.text, "three")
-        XCTAssertEqual(frame.next2?.text, "four")
+    func testBuildsSixLineWindow() {
+        let frame = LyricsSyncEngine().frame(for: document, playbackPosition: 14.5)
+        XCTAssertEqual(frame.current?.text, "three")
+        XCTAssertEqual(frame.previous3?.text, "zero")
+        XCTAssertEqual(frame.previous2?.text, "one")
+        XCTAssertEqual(frame.previous1?.text, "two")
+        XCTAssertEqual(frame.next1?.text, "four")
+        XCTAssertEqual(frame.next2?.text, "five")
     }
 
     func testPositiveOffsetDelaysLyrics() {
@@ -52,7 +54,7 @@ extension LyricsSyncEngineTests {
         XCTAssertTrue(middle.karaokeEligible)
         XCTAssertGreaterThan(middle.lineProgress, 0)
 
-        let last = LyricsSyncEngine().frame(for: document, playbackPosition: 19.0)
+        let last = LyricsSyncEngine().frame(for: document, playbackPosition: 23.0)
         XCTAssertFalse(last.karaokeEligible)
     }
 }

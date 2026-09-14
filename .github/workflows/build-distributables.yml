@@ -55,6 +55,17 @@ jobs:
             build/artifacts/LyriCar-standard-unsigned.ipa
             build/artifacts/LyriCar-standard-unsigned.ipa.sha256
           if-no-files-found: error
+      - name: Build Companion IPA
+        shell: bash
+        run: bash ./scripts/build_unsigned_ipa.sh LyriCarCompanion LyriCarCompanion LyriCar-companion-unsigned
+      - name: Upload Companion IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-companion-unsigned-IPA
+          path: |
+            build/artifacts/LyriCar-companion-unsigned.ipa
+            build/artifacts/LyriCar-companion-unsigned.ipa.sha256
+          if-no-files-found: error
       - name: Build experimental CarPlay IPA
         shell: bash
         run: bash ./scripts/build_unsigned_ipa.sh LyriCarExperimental LyriCarExperimental LyriCar-carplay-experimental-unsigned

@@ -60,6 +60,18 @@ jobs:
             -derivedDataPath build/DerivedData-standard \
             CODE_SIGNING_ALLOWED=NO \
             build | tee build-ios-standard.log
+      - name: Build companion app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project LyriCar.xcodeproj \
+            -scheme LyriCarCompanion \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData-companion \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tee build-ios-companion.log
       - name: Build experimental CarPlay app
         run: |
           set -o pipefail
@@ -78,4 +90,5 @@ jobs:
           name: ios-build-logs
           path: |
             build-ios-standard.log
+            build-ios-companion.log
             build-ios-experimental.log

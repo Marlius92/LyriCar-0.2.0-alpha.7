@@ -309,7 +309,7 @@ final class AppModel: ObservableObject {
                     await self.liveActivity.update(
                         playback: playback,
                         frame: frame,
-                        enabled: self.settings.liveActityEnabled
+                        enabled: self.settings.liveActivityEnabled
                     )
                     self.widgetSharingStatus = self.widgetState.update(playback: playback, frame: frame)
                 } else {
@@ -360,7 +360,7 @@ final class AppModel: ObservableObject {
         do {
             let incoming = try await spotify.currentPlayback()
             apply(incoming)
-            statusMessage = incoming == nil ? "Aprii Spotify e avvia un brano." : ""
+            statusMessage = incoming == nil ? "Apri Spotify e avvia un brano." : ""
         } catch SpotifyAuthError.notAuthenticated {
             connectionState = .disconnected
             statusMessage = SpotifyAuthError.notAuthenticated.localizedDescription

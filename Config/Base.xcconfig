@@ -2,6 +2,8 @@
 SPOTIFY_CLIENT_ID =
 LYRICAR_BUNDLE_ID = com.marlius.lyricar
 LYRICAR_WIDGET_BUNDLE_ID = com.marlius.lyricar.widgets
+LYRICAR_COMPANION_BUNDLE_ID = com.marlius.lyricar.companion
+LYRICAR_COMPANION_WIDGET_BUNDLE_ID = com.marlius.lyricar.companion.widgets
 LYRICAR_EXPERIMENTAL_BUNDLE_ID = com.marlius.lyricar.experimental
 LYRICAR_EXPERIMENTAL_WIDGET_BUNDLE_ID = com.marlius.lyricar.experimental.widgets
 #include? "Secrets.local.xcconfig"

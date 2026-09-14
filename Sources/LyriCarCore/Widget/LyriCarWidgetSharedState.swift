@@ -3,12 +3,12 @@ import Foundation
 import Security
 #endif
 
-/// Snapshot shared between the iPhone app and the WidgetKit extension.
-/// The widget intentionally receives only presentation data; Spotify credentials
-/// and the complete lyrics document never leave the app container.
+/// Snapshot shared between the iPhone app and the WidgetKit extensions.
+/// Only presentation data is shared; Spotify credentials remain private.
 public struct LyriCarWidgetSharedState: Codable, Hashable, Sendable {
     public var title: String
     public var artist: String
+    public var previous3: String
     public var previous2: String
     public var previous1: String
     public var current: String
@@ -25,6 +25,7 @@ public struct LyriCarWidgetSharedState: Codable, Hashable, Sendable {
     public init(
         title: String,
         artist: String,
+        previous3: String = "",
         previous2: String,
         previous1: String,
         current: String,
@@ -40,6 +41,7 @@ public struct LyriCarWidgetSharedState: Codable, Hashable, Sendable {
     ) {
         self.title = title
         self.artist = artist
+        self.previous3 = previous3
         self.previous2 = previous2
         self.previous1 = previous1
         self.current = current
@@ -75,6 +77,7 @@ public struct LyriCarWidgetSharedState: Codable, Hashable, Sendable {
     public static let placeholder = LyriCarWidgetSharedState(
         title: "LyriCar",
         artist: "Apri LyriCar e avvia Spotify",
+        previous3: "",
         previous2: "",
         previous1: "",
         current: "Testi sincronizzati",
@@ -106,12 +109,7 @@ public enum LyriCarWidgetSharedTransport: String, Codable, Hashable, Sendable {
     }
 }
 
-/// Redundant shared store used by both the host app and the widget extension.
-///
-/// Signulous can re-sign nested extensions differently from the host app. To make
-/// device testing resilient, LyriCar writes the same compact snapshot through two
-/// independent channels that are both permitted by the current provisioning
-/// profile: App Group storage and a shared Keychain access group.
+/// Redundant shared store used by the host apps and WidgetKit extensions.
 public enum LyriCarWidgetSharedStore {
     public static let stateKey = "lyricar.widget.shared-state.v2"
     public static let appGroupIdentifier = "group.a4799f2e729d57e0.1"
