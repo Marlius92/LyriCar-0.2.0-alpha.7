@@ -48,8 +48,9 @@ private struct CompanionStatusView: View {
                     }
 
                     diagnosticsCard
+                    signingDetailsCard
 
-                    Text("LyriComp prova prima l’App Group e poi il Keychain condiviso. Se almeno uno dei due canali resta disponibile dopo la firma, può ricevere lo stato di LyriCar.")
+                    Text("LyriComp usa gli identificatori realmente presenti dopo la firma. Se Signulous ha riscritto App Group o Keychain, verranno rilevati automaticamente.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -89,21 +90,50 @@ private struct CompanionStatusView: View {
                 Label("Nessuno stato condiviso ricevuto", systemImage: "xmark.circle")
                     .foregroundStyle(.orange)
             }
-
-            if !diagnostics.appGroupAvailable && diagnostics.keychainAccessAvailable {
-                Text("Signulous non ha concesso l’App Group, ma il fallback Keychain è disponibile. LyriComp può ancora funzionare se LyriCar riesce a scrivere nello stesso gruppo Keychain.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if !diagnostics.appGroupAvailable && !diagnostics.keychainAccessAvailable {
-                Text("La firma iOS non ha concesso né App Group né Keychain condiviso. In questa configurazione LyriCar e LyriComp non possono scambiarsi direttamente lo stato.")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
         }
         .font(.footnote)
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var signingDetailsCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Firma effettiva")
+                .font(.headline)
+                .foregroundStyle(.white)
+
+            detail("Team", diagnostics.teamIdentifier ?? "—")
+            detail("Application ID", diagnostics.applicationIdentifier ?? "—")
+            detail("App Group usato", diagnostics.effectiveAppGroup ?? "nessuno")
+            detail("Keychain usato", diagnostics.effectiveKeychainGroup ?? "nessuno")
+            detail(
+                "App Group firmati",
+                diagnostics.signedAppGroups.isEmpty
+                    ? "nessuno"
+                    : diagnostics.signedAppGroups.joined(separator: "\n")
+            )
+            detail(
+                "Keychain group firmati",
+                diagnostics.signedKeychainGroups.isEmpty
+                    ? "nessuno"
+                    : diagnostics.signedKeychainGroups.joined(separator: "\n")
+            )
+        }
+        .font(.caption)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func detail(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .foregroundStyle(.white)
+                .textSelection(.enabled)
+        }
     }
 
     private func statusLabel(
