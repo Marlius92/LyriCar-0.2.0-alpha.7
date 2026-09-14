@@ -7,7 +7,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = LyriCarSpotify
 
 LyriCarSpotify_FILES = LyriCarSpotify.m
-LyriCarSpotify_CFLAGS = -fobjc-arc -Osize
+LyriCarSpotify_CFLAGS = -fobjc-arc -Os
 LyriCarSpotify_FRAMEWORKS = Foundation UIKit CarPlay MediaPlayer
 
 include $(THEOS_MAKE_PATH)/tweak.mk
