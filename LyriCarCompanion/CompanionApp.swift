@@ -19,7 +19,7 @@ private struct CompanionStatusView: View {
             Color.black.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 18) {
-                    Text("LyriCar Companion")
+                    Text("LyriComp")
                         .font(.title.bold())
                         .foregroundStyle(.white)
 
@@ -40,7 +40,7 @@ private struct CompanionStatusView: View {
                         }
                         .padding()
                     } else {
-                        Text("Apri LyriCar principale, collega Spotify e avvia un brano. La Companion leggerà automaticamente gli stessi testi.")
+                        Text("Apri LyriCar principale, collega Spotify e avvia un brano. LyriComp leggerà automaticamente gli stessi testi.")
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding()
@@ -48,7 +48,7 @@ private struct CompanionStatusView: View {
 
                     diagnosticsCard
 
-                    Text("Non collegare Spotify anche qui: la Companion usa lo stato condiviso di LyriCar.")
+                    Text("Non collegare Spotify anche qui: LyriComp usa lo stato condiviso di LyriCar.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -83,7 +83,7 @@ private struct CompanionStatusView: View {
             }
 
             if !LyriCarWidgetSharedStore.appGroupAvailable {
-                Text("La firma iOS non ha concesso l’App Group. Firma LyriCar e LyriCar Companion con lo stesso certificato/profilo e senza cambiare i bundle ID; altrimenti i due widget non possono condividere brano e testi.")
+                Text("La firma iOS non ha concesso l’App Group. Firma LyriCar e LyriComp con lo stesso certificato/profilo e senza cambiare i bundle ID; altrimenti i due widget non possono condividere brano e testi.")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
