@@ -1,0 +1,47 @@
+name: Build Spotify Tweak
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'SpotifyTweak/**'
+      - '.github/workflows/build-spotify-tweak.yml'
+
+jobs:
+  build:
+    runs-on: xcode-27
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Install Theos build dependencies
+        run: |
+          brew install ldid xz || true
+
+      - name: Install Theos
+        run: |
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+
+      - name: Build LyriCar Spotify tweak
+        run: |
+          set -o pipefail
+          make -C SpotifyTweak clean
+          make -C SpotifyTweak FINALPACKAGE=1 all | tee build-spotify-tweak.log
+
+      - name: Collect dylib
+        run: |
+          mkdir -p artifacts
+          find SpotifyTweak/.theos -type f -name 'LyriCarSpotify.dylib' -print -exec cp {} artifacts/ \;
+          test -f artifacts/LyriCarSpotify.dylib
+          cp SpotifyTweak/LyriCarSpotify.plist artifacts/
+          cp build-spotify-tweak.log artifacts/
+
+      - name: Upload tweak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-Spotify-Tweak
+          path: artifacts/
