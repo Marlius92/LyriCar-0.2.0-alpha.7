@@ -201,22 +201,29 @@ static void LyriCarRenderCurrentLyrics(BOOL force) {
     }
     LyriCarLastRenderedIndex = index;
 
-    NSString *title = LyriCarNowPlayingString(MPMediaItemPropertyTitle, @"Brano corrente");
-    NSString *artist = LyriCarNowPlayingString(MPMediaItemPropertyArtist, @"Spotify");
-    NSString *previous2 = LyriCarSafeLineText(index - 2);
-    NSString *previous1 = LyriCarSafeLineText(index - 1);
-    NSString *current = LyriCarSafeLineText(index);
-    NSString *next1 = LyriCarSafeLineText(index + 1);
-    NSString *next2 = LyriCarSafeLineText(index + 2);
+    // The Clio's 9.3-inch portrait display has enough vertical area to make a
+    // larger lyric window useful. Keep up to four lines before and four after
+    // the current line (nine lyric rows total) and shift the window at the
+    // beginning/end of a song so available rows are never wasted on blanks.
+    const NSInteger desiredRows = 9;
+    const NSInteger preferredPrevious = 4;
+    NSInteger lineCount = (NSInteger)LyriCarSyncedLines.count;
 
-    LyriCarSetLyricsRows(@[
-        LyriCarRow(title, artist),
-        LyriCarRow(previous2, nil),
-        LyriCarRow(previous1, nil),
-        LyriCarRow([NSString stringWithFormat:@"▶︎ %@", current], @"Riga corrente"),
-        LyriCarRow(next1, nil),
-        LyriCarRow(next2, nil)
-    ]);
+    NSInteger start = MAX(0, index - preferredPrevious);
+    NSInteger end = MIN(lineCount - 1, start + desiredRows - 1);
+    start = MAX(0, end - desiredRows + 1);
+
+    NSMutableArray<CPListItem *> *rows = [NSMutableArray arrayWithCapacity:desiredRows];
+    for (NSInteger rowIndex = start; rowIndex <= end; rowIndex++) {
+        NSString *text = LyriCarSafeLineText(rowIndex);
+        if (rowIndex == index) {
+            [rows addObject:LyriCarRow([NSString stringWithFormat:@"▶︎ %@", text], nil)];
+        } else {
+            [rows addObject:LyriCarRow(text, nil)];
+        }
+    }
+
+    LyriCarSetLyricsRows(rows);
 }
 
 static void LyriCarStopLyricsTimer(void) {
