@@ -8,9 +8,7 @@ Add a **Lyrics** button to Spotify's existing CarPlay Now Playing template witho
 
 This module does **not** unlock Spotify Premium, remove ads, bypass DRM, or modify subscription features.
 
-## Milestone 0.1.0
-
-The first proof build deliberately has no network/lyrics provider dependency.
+## Milestone 0.2.0 — synchronized lyrics
 
 When Spotify is connected to CarPlay, the tweak:
 
@@ -18,9 +16,29 @@ When Spotify is connected to CarPlay, the tweak:
 2. obtains its public `CPInterfaceController`;
 3. appends a custom `CPNowPlayingImageButton` to `CPNowPlayingTemplate.sharedTemplate`;
 4. opens a `CPListTemplate` named **Lyrics** when the button is pressed;
-5. shows the current title/artist from `MPNowPlayingInfoCenter` plus harmless placeholder lyric rows.
+5. reads current title, artist, album, duration and playback position from `MPNowPlayingInfoCenter`;
+6. queries LRCLIB for `syncedLyrics`;
+7. parses LRC timestamps;
+8. displays two previous lines, the highlighted current line, and two upcoming lines;
+9. advances the active line automatically while playback continues;
+10. detects track changes while the Lyrics page is open and loads the new song automatically.
 
-If this page appears on the vehicle display, the CarPlay injection path is proven. The next milestone will replace the placeholder rows with LRCLIB synchronized lyrics.
+The CarPlay page deliberately updates at line level rather than attempting LyriCar's 60 fps per-character renderer. `CPListTemplate` is intended for template-based CarPlay UI, so row-level synchronized updates are the safer first implementation.
+
+## Layout
+
+The Lyrics page is approximately:
+
+```text
+Song title — Artist
+previous -2
+previous -1
+▶ CURRENT LINE
+next +1
+next +2
+```
+
+If LRCLIB has no timestamped lyrics, the page reports that explicitly instead of showing stale text.
 
 ## Why this approach
 
@@ -45,13 +63,16 @@ The package filter targets Spotify's normal bundle identifier:
 
 For sideloaded Spotify, the dylib should be injected directly into the Spotify application binary; this avoids depending on the post-signing bundle identifier used by a signer.
 
-## Next milestone
+## Test milestone
 
-After the button/page is confirmed on real CarPlay:
+The real-device test should verify:
 
-- read current track and playback clock from `MPNowPlayingInfoCenter`;
-- query LRCLIB;
-- parse synced LRC timestamps;
-- update previous/current/next rows;
-- add user-adjustable lyric offset;
-- keep updates conservative for CarPlay templates rather than attempting the 60 fps renderer used by the LyriCar iPhone app.
+- Spotify launches after signing;
+- Spotify appears normally in CarPlay;
+- the Lyrics button appears in Now Playing;
+- pressing it opens the Lyrics template;
+- LRCLIB returns the current song;
+- the highlighted line advances with playback;
+- pause/seek/track changes do not leave stale lyrics on screen.
+
+After this is confirmed on real CarPlay we can evaluate a more aggressive Spotify-CarPlay UI hook for finer-grained karaoke effects.
