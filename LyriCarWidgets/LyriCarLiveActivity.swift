@@ -65,42 +65,69 @@ private struct LyriCarActivityContent: View {
         }
     }
 
-    /// Compact, glanceable layout used by CarPlay Dashboard and Apple Watch.
+    /// Lyrics-first layout used by CarPlay Dashboard. CarPlay disables
+    /// interactive controls in Live Activities, so the limited space is
+    /// dedicated to the synchronized five-line lyric window.
     private var carPlaySmall: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 7) {
+        VStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
-                    .font(.caption.weight(.semibold))
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(context.state.title)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(1)
-                    Text(context.state.artist)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            Text(context.state.currentLine)
-                .font(.headline.weight(.bold))
-                .lineLimit(3)
-                .minimumScaleFactor(0.72)
-
-            if !context.state.nextLine.isEmpty {
-                Text(context.state.nextLine)
-                    .font(.caption)
+                    .font(.caption2.weight(.semibold))
+                Text(context.state.title)
+                    .font(.caption2.weight(.semibold))
+                    .lineLimit(1)
+                Text("·")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(context.state.artist)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            activityProgress
-                .tint(.primary)
+            Spacer(minLength: 1)
+
+            lyric(context.state.previous2, size: 9, opacity: 0.24, lines: 1)
+            lyric(context.state.previousLine, size: 11, opacity: 0.48, lines: 1, weight: .medium)
+
+            Text(context.state.currentLine)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.62)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .contentTransition(.opacity)
+
+            lyric(context.state.nextLine, size: 11, opacity: 0.48, lines: 1, weight: .medium)
+            lyric(context.state.next2, size: 9, opacity: 0.24, lines: 1)
+
+            Spacer(minLength: 1)
         }
-        .padding(12)
-        .containerBackground(.black.opacity(0.92), for: .widget)
+        .padding(10)
+        .containerBackground(.black.opacity(0.94), for: .widget)
+        .animation(.easeInOut(duration: 0.32), value: context.state.currentLine)
+    }
+
+    @ViewBuilder
+    private func lyric(
+        _ text: String,
+        size: CGFloat,
+        opacity: Double,
+        lines: Int,
+        weight: Font.Weight = .regular
+    ) -> some View {
+        if !text.isEmpty {
+            Text(text)
+                .font(.system(size: size, weight: weight, design: .rounded))
+                .foregroundStyle(.white.opacity(opacity))
+                .lineLimit(lines)
+                .minimumScaleFactor(0.65)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .contentTransition(.opacity)
+        }
     }
 
     @ViewBuilder
@@ -128,6 +155,14 @@ private struct LyriCarActivityContent: View {
                 Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
             }
 
+            if !context.state.previous2.isEmpty {
+                Text(context.state.previous2)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .opacity(0.42)
+                    .lineLimit(1)
+            }
+
             if !context.state.previousLine.isEmpty {
                 Text(context.state.previousLine)
                     .font(.caption2)
@@ -144,6 +179,14 @@ private struct LyriCarActivityContent: View {
                 Text(context.state.nextLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            if !context.state.next2.isEmpty {
+                Text(context.state.next2)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .opacity(0.42)
                     .lineLimit(1)
             }
 
