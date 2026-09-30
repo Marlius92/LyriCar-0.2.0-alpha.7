@@ -65,49 +65,42 @@ private struct LyriCarActivityContent: View {
         }
     }
 
-    /// Lyrics-first layout used by CarPlay Dashboard. CarPlay disables
-    /// interactive controls in Live Activities, so the limited space is
-    /// dedicated to the synchronized five-line lyric window.
+    /// Three-line CarPlay layout: previous in gray, current in white,
+    /// next in gray. The Live Activity mirrors the single WidgetKit widget.
     private var carPlaySmall: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 5) {
-                Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
-                    .font(.caption2.weight(.semibold))
-                Text(context.state.title)
-                    .font(.caption2.weight(.semibold))
-                    .lineLimit(1)
-                Text("·")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(context.state.artist)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(spacing: 8) {
+            Spacer(minLength: 0)
 
-            Spacer(minLength: 1)
-
-            lyric(context.state.previous2, size: 9, opacity: 0.24, lines: 1)
-            lyric(context.state.previousLine, size: 11, opacity: 0.48, lines: 1, weight: .medium)
+            lyric(
+                context.state.previousLine,
+                size: 12,
+                opacity: 0.46,
+                lines: 2,
+                weight: .medium
+            )
 
             Text(context.state.currentLine)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .lineLimit(2)
-                .minimumScaleFactor(0.62)
+                .lineLimit(3)
+                .minimumScaleFactor(0.58)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .contentTransition(.opacity)
 
-            lyric(context.state.nextLine, size: 11, opacity: 0.48, lines: 1, weight: .medium)
-            lyric(context.state.next2, size: 9, opacity: 0.24, lines: 1)
+            lyric(
+                context.state.nextLine,
+                size: 12,
+                opacity: 0.46,
+                lines: 2,
+                weight: .medium
+            )
 
-            Spacer(minLength: 1)
+            Spacer(minLength: 0)
         }
-        .padding(10)
+        .padding(11)
         .containerBackground(.black.opacity(0.94), for: .widget)
-        .animation(.easeInOut(duration: 0.32), value: context.state.currentLine)
+        .animation(.easeInOut(duration: 0.28), value: context.state.currentLine)
     }
 
     @ViewBuilder
@@ -155,14 +148,6 @@ private struct LyriCarActivityContent: View {
                 Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
             }
 
-            if !context.state.previous2.isEmpty {
-                Text(context.state.previous2)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .opacity(0.42)
-                    .lineLimit(1)
-            }
-
             if !context.state.previousLine.isEmpty {
                 Text(context.state.previousLine)
                     .font(.caption2)
@@ -179,14 +164,6 @@ private struct LyriCarActivityContent: View {
                 Text(context.state.nextLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            if !context.state.next2.isEmpty {
-                Text(context.state.next2)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .opacity(0.42)
                     .lineLimit(1)
             }
 
