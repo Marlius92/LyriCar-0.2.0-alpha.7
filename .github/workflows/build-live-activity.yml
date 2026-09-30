@@ -10,7 +10,7 @@ on:
       - 'Sources/LyriCarCore/Activity/**'
       - 'project.yml'
       - 'VERSION'
-      - 'RELEASE_NOTES_0.3.3-alpha.17.md'
+      - 'RELEASE_NOTES_0.3.4-alpha.18.md'
       - '.github/workflows/build-live-activity.yml'
 
 permissions:
@@ -44,13 +44,13 @@ jobs:
 
       - name: Build standard Live Activity IPA
         shell: bash
-        run: bash ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-0.3.3-alpha.17-live-activity-unsigned
+        run: bash ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-0.3.4-alpha.18-live-activity-unsigned
 
       - name: Upload Live Activity IPA
         uses: actions/upload-artifact@v4
         with:
-          name: LyriCar-0.3.3-alpha.17-LiveActivity-unsigned-IPA
+          name: LyriCar-0.3.4-alpha.18-LiveActivity-unsigned-IPA
           path: |
-            build/artifacts/LyriCar-0.3.3-alpha.17-live-activity-unsigned.ipa
-            build/artifacts/LyriCar-0.3.3-alpha.17-live-activity-unsigned.ipa.sha256
+            build/artifacts/LyriCar-0.3.4-alpha.18-live-activity-unsigned.ipa
+            build/artifacts/LyriCar-0.3.4-alpha.18-live-activity-unsigned.ipa.sha256
           if-no-files-found: error
