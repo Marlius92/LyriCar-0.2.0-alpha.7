@@ -1,0 +1,56 @@
+name: Build Live Activity Prototype
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'LyriCarApp/App/**'
+      - 'LyriCarApp/LiveActivity/**'
+      - 'LyriCarWidgets/**'
+      - 'Sources/LyriCarCore/Activity/**'
+      - 'project.yml'
+      - 'VERSION'
+      - 'RELEASE_NOTES_0.3.3-alpha.17.md'
+      - '.github/workflows/build-live-activity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  unsigned-live-activity-ipa:
+    name: LyriCar Live Activity IPA
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Normalize shell script permissions
+        shell: bash
+        run: chmod +x scripts/*.sh
+
+      - name: Optional preconfigured Spotify Client ID
+        shell: bash
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+        run: |
+          if [[ -n "$SPOTIFY_CLIENT_ID" ]]; then
+            printf 'SPOTIFY_CLIENT_ID = %s\n' "$SPOTIFY_CLIENT_ID" > Config/Secrets.local.xcconfig
+          fi
+
+      - name: Build standard Live Activity IPA
+        shell: bash
+        run: bash ./scripts/build_unsigned_ipa.sh LyriCar LyriCar LyriCar-0.3.3-alpha.17-live-activity-unsigned
+
+      - name: Upload Live Activity IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: LyriCar-0.3.3-alpha.17-LiveActivity-unsigned-IPA
+          path: |
+            build/artifacts/LyriCar-0.3.3-alpha.17-live-activity-unsigned.ipa
+            build/artifacts/LyriCar-0.3.3-alpha.17-live-activity-unsigned.ipa.sha256
+          if-no-files-found: error
