@@ -93,12 +93,14 @@ final class AppModel: ObservableObject {
         refreshCarPlayDetection()
         if connectionState == .connected { startPolling() }
         startActivityTicker()
+        Task { await liveActivity.prepare(enabled: settings.liveActivityEnabled) }
     }
 
     func setAppActive(_ active: Bool) {
         appIsActive = active
         if active {
             refreshCarPlayDetection()
+            Task { await liveActivity.prepare(enabled: settings.liveActivityEnabled) }
         }
         if active, connectionState == .connected {
             startPolling()
@@ -228,7 +230,11 @@ final class AppModel: ObservableObject {
 
     func setLiveActivity(_ enabled: Bool) {
         settings.liveActivityEnabled = enabled
-        if !enabled { Task { await liveActivity.end() } }
+        if enabled, appIsActive {
+            Task { await liveActivity.prepare(enabled: true) }
+        } else if !enabled {
+            Task { await liveActivity.end() }
+        }
     }
 
     func clearLyricsCache() async {
@@ -313,10 +319,21 @@ final class AppModel: ObservableObject {
                     )
                     self.widgetSharingStatus = self.widgetState.update(playback: playback, frame: frame)
                 } else {
-                    await self.liveActivity.end()
+                    if self.appIsActive {
+                        await self.liveActivity.prepare(enabled: self.settings.liveActivityEnabled)
+                    }
                     self.widgetSharingStatus = self.widgetState.clear()
                 }
-                try? await Task.sleep(for: .seconds(1))
+
+                let interval: TimeInterval
+                if self.carPlayConnected, self.playback?.isPlaying == true {
+                    interval = 0.25
+                } else if self.playback?.isPlaying == true {
+                    interval = 0.5
+                } else {
+                    interval = 1.0
+                }
+                try? await Task.sleep(for: .seconds(interval))
             }
         }
     }
