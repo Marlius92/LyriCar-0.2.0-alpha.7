@@ -72,9 +72,7 @@ final class LyriCarWidgetStateManager {
 
 private enum LyriCarWidgetKinds {
     static let all = [
-        "LyriCar.Context.Before",
-        "LyriCar.Current",
-        "LyriCar.Context.After",
+        "LyriCar.Lyrics",
         "LyriCar.Companion.Lower"
     ]
 }
