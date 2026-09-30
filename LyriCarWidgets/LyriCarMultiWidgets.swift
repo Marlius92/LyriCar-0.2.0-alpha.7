@@ -13,7 +13,12 @@ private struct LyriCarWidgetProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (LyriCarWidgetEntry) -> Void) {
-        completion(LyriCarWidgetEntry(date: Date(), state: LyriCarWidgetSharedStore.load() ?? .placeholder))
+        completion(
+            LyriCarWidgetEntry(
+                date: Date(),
+                state: LyriCarWidgetSharedStore.load() ?? .placeholder
+            )
+        )
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<LyriCarWidgetEntry>) -> Void) {
@@ -24,114 +29,75 @@ private struct LyriCarWidgetProvider: TimelineProvider {
     }
 }
 
-struct LyriCarBeforeWidget: Widget {
-    static let kind = "LyriCar.Context.Before"
+struct LyriCarLyricsWidget: Widget {
+    static let kind = "LyriCar.Lyrics"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: LyriCarWidgetProvider()) { entry in
-            LyriCarBeforeWidgetView(state: entry.state)
+            LyriCarLyricsWidgetView(state: entry.state)
                 .containerBackground(.black, for: .widget)
         }
-        .configurationDisplayName("LyriCar · Superiore")
-        .description("Le tre righe appena cantate, senza controlli o tempi.")
+        .configurationDisplayName("LyriCar · Lyrics")
+        .description("Riga precedente, attuale e successiva.")
         .supportedFamilies([.systemSmall])
     }
 }
 
-struct LyriCarCurrentWidget: Widget {
-    static let kind = "LyriCar.Current"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: LyriCarWidgetProvider()) { entry in
-            LyriCarCurrentWidgetView(state: entry.state)
-                .containerBackground(.black, for: .widget)
-        }
-        .configurationDisplayName("LyriCar · Corrente")
-        .description("Riga corrente grande e due righe future, solo testo.")
-        .supportedFamilies([.systemSmall])
-    }
-}
-
-struct LyriCarAfterWidget: Widget {
-    static let kind = "LyriCar.Context.After"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: LyriCarWidgetProvider()) { entry in
-            LyriCarAfterWidgetView(state: entry.state)
-                .containerBackground(.black, for: .widget)
-        }
-        .configurationDisplayName("LyriCar · Dopo")
-        .description("Le due righe successive, solo testo.")
-        .supportedFamilies([.systemSmall])
-    }
-}
-
-private struct LyriCarBeforeWidgetView: View {
+private struct LyriCarLyricsWidgetView: View {
     let state: LyriCarWidgetSharedState
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 9) {
             Spacer(minLength: 0)
-            line(state.previous3, size: 11, opacity: 0.24, lines: 2)
-            line(state.previous2, size: 13, opacity: 0.44, lines: 2)
-            line(state.previous1, size: 16, opacity: 0.72, lines: 2, weight: .semibold)
+
+            lyric(
+                state.previous1,
+                size: 13,
+                opacity: 0.46,
+                weight: .medium,
+                lines: 2
+            )
+
+            Text(state.current)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(3)
+                .minimumScaleFactor(0.52)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .contentTransition(.opacity)
+
+            lyric(
+                state.next1,
+                size: 13,
+                opacity: 0.46,
+                weight: .medium,
+                lines: 2
+            )
+
             Spacer(minLength: 0)
         }
         .padding(11)
+        .animation(.easeInOut(duration: 0.28), value: state.current)
     }
-}
 
-private struct LyriCarCurrentWidgetView: View {
-    let state: LyriCarWidgetSharedState
-
-    var body: some View {
-        VStack(spacing: 7) {
-            Spacer(minLength: 0)
-            Text(state.current)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(4)
-                .minimumScaleFactor(0.50)
+    @ViewBuilder
+    private func lyric(
+        _ text: String,
+        size: CGFloat,
+        opacity: Double,
+        weight: Font.Weight,
+        lines: Int
+    ) -> some View {
+        if !text.isEmpty {
+            Text(text)
+                .font(.system(size: size, weight: weight, design: .rounded))
+                .foregroundStyle(.white.opacity(opacity))
+                .lineLimit(lines)
+                .minimumScaleFactor(0.62)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-
-            line(state.next1, size: 13, opacity: 0.52, lines: 2, weight: .medium)
-            line(state.next2, size: 11, opacity: 0.26, lines: 2)
-            Spacer(minLength: 0)
+                .contentTransition(.opacity)
         }
-        .padding(10)
-    }
-}
-
-private struct LyriCarAfterWidgetView: View {
-    let state: LyriCarWidgetSharedState
-
-    var body: some View {
-        VStack(spacing: 10) {
-            Spacer(minLength: 0)
-            line(state.next1, size: 17, opacity: 0.68, lines: 3, weight: .semibold)
-            line(state.next2, size: 13, opacity: 0.34, lines: 3)
-            Spacer(minLength: 0)
-        }
-        .padding(12)
-    }
-}
-
-@ViewBuilder
-private func line(
-    _ text: String,
-    size: CGFloat,
-    opacity: Double,
-    lines: Int,
-    weight: Font.Weight = .regular
-) -> some View {
-    if !text.isEmpty {
-        Text(text)
-            .font(.system(size: size, weight: weight, design: .rounded))
-            .foregroundStyle(.white.opacity(opacity))
-            .lineLimit(lines)
-            .minimumScaleFactor(0.62)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
     }
 }
