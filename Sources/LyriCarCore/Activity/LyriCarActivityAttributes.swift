@@ -6,9 +6,11 @@ public struct LyriCarActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         public var title: String
         public var artist: String
+        public var previous2: String
         public var previousLine: String
         public var currentLine: String
         public var nextLine: String
+        public var next2: String
         public var position: TimeInterval
         public var duration: TimeInterval
         public var isPlaying: Bool
@@ -17,9 +19,11 @@ public struct LyriCarActivityAttributes: ActivityAttributes {
         public init(
             title: String,
             artist: String,
+            previous2: String,
             previousLine: String,
             currentLine: String,
             nextLine: String,
+            next2: String,
             position: TimeInterval,
             duration: TimeInterval,
             isPlaying: Bool,
@@ -27,9 +31,11 @@ public struct LyriCarActivityAttributes: ActivityAttributes {
         ) {
             self.title = title
             self.artist = artist
+            self.previous2 = previous2
             self.previousLine = previousLine
             self.currentLine = currentLine
             self.nextLine = nextLine
+            self.next2 = next2
             self.position = position
             self.duration = duration
             self.isPlaying = isPlaying
